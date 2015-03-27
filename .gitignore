@@ -1,0 +1,4 @@
+/images/ILSVRC2012_devkit_t12/*
+/images/imagenet/*
+
+*.caffemodel
