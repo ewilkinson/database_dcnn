@@ -2,3 +2,4 @@
 /images/imagenet/*
 
 *.caffemodel
+*.npy
