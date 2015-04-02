@@ -2,14 +2,17 @@ import caffe
 import numpy as np
 import os
 
+feature_layers = ['conv3', 'conv4', 'fc6', 'fc7', 'pool1', 'pool2', 'pool5']
+img_dir = "../images/imagenet"
+feature_dir = "../features"
+caffe_root = '/home/eric/caffe/caffe-master/'
+
 # Simple generator for looping over an array in batches
 def batch_gen(data, batch_size):
     for i in range(0, len(data), batch_size):
             yield data[i:i+batch_size]
 
 def load_network(use_alexnet=True):
-
-    caffe_root = '/home/eric/caffe/caffe-master/'  # this file is expected to be in {caffe_root}/examples
 
     if use_alexnet:
         # Set the right path to your model definition file, pretrained model weights,
@@ -37,3 +40,34 @@ def load_network(use_alexnet=True):
     net.set_mode_gpu()
 
     return net, params, blobs
+
+def load_feature_layer(layer):
+    """
+    Loads the feature layer specified
+
+    :param layer: A member of utils.feature_layers
+    :return: X, ids
+    """
+    if not layer in feature_layers:
+        raise NotImplementedError('Feature Layer Type Not Found.')
+
+
+    features_path = os.path.join(feature_dir,layer)
+    files = os.listdir(features_path)
+    N = len(files)
+
+    if N <= 1:
+        raise ValueError('Path provided contained no features : ' + features_path)
+
+    # there is a holder file in each directory which needs to be removed
+    files.remove('holder.txt')
+
+    for file in files:
+        sp = file.split('_')
+        if 'X' in sp:
+            X = np.load(os.path.join(features_path, file))
+        elif 'ids' in sp:
+            ids = np.load(os.path.join(features_path, file))
+
+    return X, ids
+

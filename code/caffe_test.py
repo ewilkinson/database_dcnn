@@ -25,19 +25,22 @@ import caffe
 
 # Set the right path to your model definition file, pretrained model weights,
 # and the image you would like to classify.
-MODEL_FILE = './caffe/bvlc_reference_caffenet/deploy.prototxt'
-PRETRAINED = './caffe/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel'
+MODEL_FILE = '../caffe/bvlc_reference_caffenet/deploy.prototxt'
+PRETRAINED = '../caffe/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel'
 
 
 # alexnet
 # MODEL_FILE = './caffe/bvlc_alexnet/deploy.prototxt'
 # PRETRAINED = './caffe/bvlc_alexnet/bvlc_alexnet.caffemodel'
 
-IMAGE_FILE = './images/examples/cat.jpg'
-IMAGE_FILE = './images/imagenet/ILSVRC2012_val_00010306.JPEG'
+IMAGE_FILE = '../images/examples/cat.jpg'
+IMAGE_FILE = '../images/imagenet/ILSVRC2012_val_00010306.JPEG'
+
+mean = np.load(os.path.join(caffe_root, 'python/caffe/imagenet/ilsvrc_2012_mean.npy'))
+print mean
 
 net = caffe.Classifier(MODEL_FILE, PRETRAINED,
-                       mean=np.load(os.path.join(caffe_root, 'python/caffe/imagenet/ilsvrc_2012_mean.npy')),
+                       mean=np.load(os.path.join(caffe_root, 'python/caffe/imagenet/ilsvrc_2012_mean.npy')).mean(1).mean(1),
                        channel_swap=(2, 1, 0),
                        raw_scale=255,
                        image_dims=(256, 256))
@@ -92,7 +95,7 @@ def batch_gen(data, batch_size):
             yield data[i:i+batch_size]
 
 
-import os
-dir = "./images/imagenet"
-for files in batch_gen(os.listdir(dir),10):
-    print files
+# import os
+# dir = "../images/imagenet"
+# for files in batch_gen(os.listdir(dir),10):
+#     print files
