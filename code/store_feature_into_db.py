@@ -15,6 +15,7 @@ cur.execute("CREATE TABLE test (id serial PRIMARY KEY, num integer, data float8[
 #cur.execute("SELECT * FROM test;")
 
 
+
 #------------------------ Script Parameters ---------------------
 
 feature_layers = ['conv3', 'conv4', 'fc6', 'fc7', 'pool1', 'pool2', 'pool5']
