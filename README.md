@@ -9,3 +9,13 @@ Imagenet images should be added to the images folder under a 'imagenet' director
 You will need to generate the caffemodel for alexnet and the caffe reference network. You can find the script to generate them in the caffe installation directory. 
 
 GNU General Public License
+
+
+
+--------------------------------------------
+functions using python
+
+1. sudo apt-get install postgresql-contrib postgresql-plpython
+
+2. use dnn.sql to implement functions
+
