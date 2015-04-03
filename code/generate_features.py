@@ -39,52 +39,6 @@ def load_network(use_alexnet=True):
 
     return net, params, blobs
 
-
-# # ------------------------ Script Parameters ---------------------
-# use_alexnet = False
-# batch_size = 10
-# feature_layers = ['conv3', 'conv4', 'fc6', 'fc7', 'pool1', 'pool2', 'pool5']
-# img_dir = "../images/imagenet"
-# feature_dir = "../features"
-# # ------------------------ Script Parameters ---------------------
-#
-#
-# net, params, blobs = load_network(use_alexnet)
-#
-# image_files = os.listdir(img_dir)
-# print 'Total Files : ', len(image_files)
-# print 'Sample File Name : ', image_files[100]
-#
-#
-# for files in batch_gen(os.listdir(img_dir), batch_size=batch_size):
-#     years, types, img_ids = [], [], []
-#     images = []
-#     for file in files:
-#         year, type, postfix = file.split('_')
-#         id, file_type = postfix.split('.')
-#         years.append(year)
-#         types.append(type)
-#         img_ids.append(id)
-#
-#         file_image = caffe.io.load_image(os.path.join(img_dir, file))
-#         images.append(file_image)
-#
-#
-#     prediction = net.predict(images)
-#
-#     # save out all the features
-#     for i in range(batch_size):
-#         id = img_ids[i]
-#
-#         for layer in feature_layers:
-#             features = net.blobs[layer].data[i]
-#
-#             file_name = years[i] + '_' + layer + '_' + img_ids[i] + '.npy'
-#             file_path = os.path.join(feature_dir, layer, file_name)
-#
-#             print 'Saving : ', file_path
-#             np.save(file_path, features)
-
 if __name__ == '__main__':
     # ------------------------ Script Parameters ---------------------
     use_alexnet = False

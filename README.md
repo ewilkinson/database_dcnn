@@ -10,6 +10,13 @@ You will need to generate the caffemodel for alexnet and the caffe reference net
 
 GNU General Public License
 
+-------------------------------------------
+Python Modules Needed 
+
+sudo pip install cython
+sudo pip install hickle
+sudo pip install psycopg2
+
 
 
 --------------------------------------------

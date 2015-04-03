@@ -7,6 +7,7 @@ import hickle as hkl
 feature_layers = ['conv3', 'conv4', 'fc6', 'fc7', 'pool1', 'pool2', 'pool5']
 img_dir = "../images/imagenet"
 feature_dir = "../features"
+compression_dir = "../compression"
 caffe_root = '/home/eric/caffe/caffe-master/'
 
 # Simple generator for looping over an array in batches

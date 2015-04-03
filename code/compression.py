@@ -26,8 +26,8 @@ if __name__ == '__main__':
     n_components = 128
 
     X, ids = utils.load_feature_layer(layer)
-    X = X[0:10000,:]
-    ids = ids[0:10000]
+    X = X[0:1000,:]
+    ids = ids[0:1000]
 
     print 'PCA Num Components : ', n_components
     start_time = time.clock()
@@ -38,4 +38,6 @@ if __name__ == '__main__':
 
 
     print X_prime.shape
+
+
 
