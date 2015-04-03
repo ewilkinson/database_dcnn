@@ -1,6 +1,8 @@
 import caffe
 import numpy as np
 import os
+import time
+import hickle as hkl
 
 feature_layers = ['conv3', 'conv4', 'fc6', 'fc7', 'pool1', 'pool2', 'pool5']
 img_dir = "../images/imagenet"
@@ -62,12 +64,17 @@ def load_feature_layer(layer):
     # there is a holder file in each directory which needs to be removed
     files.remove('holder.txt')
 
+    
+    start_time = time.clock()
     for file in files:
         sp = file.split('_')
         if 'X' in sp:
-            X = np.load(os.path.join(features_path, file))
+            X = Y = hkl.load(os.path.join(features_path, file))
         elif 'ids' in sp:
-            ids = np.load(os.path.join(features_path, file))
+            ids = hkl.load(os.path.join(features_path, file))
+
+    print 'Total Load Time for Layer : ',  layer
+    print 'Time (s) : ', time.clock() - start_time
 
     return X, ids
 

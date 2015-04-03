@@ -1,6 +1,7 @@
 import caffe
 import numpy as np
 import os
+import hickle as hkl
 
 # Simple generator for looping over an array in batches
 def batch_gen(data, batch_size):
@@ -90,7 +91,9 @@ if __name__ == '__main__':
     batch_size = 10
 
     # removed
-    feature_layers = ['conv3', 'conv4', 'fc6', 'fc7', 'pool2', 'pool5']
+    # feature_layers = ['conv3', 'conv4', 'fc6', 'fc7', 'pool2', 'pool1', 'pool5']
+    feature_layers = ['conv3', 'conv4', 'fc6', 'pool2', 'pool1', 'pool5']
+
     img_dir = "../images/imagenet"
     feature_dir = "../features"
     # ------------------------ Script Parameters ---------------------
@@ -99,6 +102,7 @@ if __name__ == '__main__':
     net, params, blobs = load_network(use_alexnet)
 
     image_files = os.listdir(img_dir)
+
     N = len(image_files)
     print 'Total Files : ', N
     print 'Sample File Name : ', image_files[100]
@@ -111,8 +115,8 @@ if __name__ == '__main__':
         prediction = net.predict([f0])
         features = net.blobs[layer].data[0]
 
-        X = np.zeros((N, features.size))
-        ids = np.zeros((N, ))
+        X = np.zeros((N, features.size), dtype='float32')
+        ids = np.zeros((N, ), dtype='int32')
 
         count = 0
         for files in batch_gen(image_files, batch_size=batch_size):
@@ -139,15 +143,25 @@ if __name__ == '__main__':
 
                 features = net.blobs[layer].data[i]
                 X[count, :] = features.ravel()
+                count = count + 1
 
-        file_name = layer  + '_X_.npy'
+        file_name = layer  + '_X_gzip.hkl'
         file_path = os.path.join(feature_dir, layer, file_name)
-
         print 'Saving : ', file_path
-        np.save(file_path, X)
 
-        file_name = layer  + '_ids_.npy'
+        # Dump data, with compression
+        hkl.dump(X, file_path, mode='w', compression='gzip')
+
+        # Compare filesizes
+        print 'compressed:   %i bytes' % os.path.getsize(file_path)
+
+
+        file_name = layer  + '_ids_gzip.hkl'
         file_path = os.path.join(feature_dir, layer, file_name)
-
         print 'Saving : ', file_path
-        np.save(file_path, X)
+
+        # Dump data, with compression
+        hkl.dump(ids, file_path, mode='w', compression='gzip')
+
+        # Compare filesizes
+        print 'compressed:   %i bytes' % os.path.getsize(file_path)
