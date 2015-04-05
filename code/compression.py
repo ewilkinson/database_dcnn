@@ -1,19 +1,21 @@
 import utils
-from sklearn import decomposition
+from sklearn.decomposition import PCA, IncrementalPCA
 import numpy as np
 
 
 
-def generate_pca_compression(X, n_components = 16):
+def generate_pca_compression(X, n_components = 16, batch_size=100):
     """
     Compresses the data using sklearn PCA implementation.
 
     :param X: Data (n_samples, n_features)
     :param n_components: Number of dimensions for PCA to keep
+    :param batch_size: Batch size for incrimental PCA
+
     :return: X_prime (the compressed representation), pca
     """
 
-    pca = decomposition.PCA(n_components=n_components)
+    pca = IncrementalPCA(n_components=n_components, batch_size=batch_size)
     pca.fit(X)
     X_prime = pca.transform(X)
 
