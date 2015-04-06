@@ -70,7 +70,7 @@ def load_feature_layer(layer):
     for file in files:
         sp = file.split('_')
         if 'X' in sp:
-            X = Y = hkl.load(os.path.join(features_path, file))
+            X = hkl.load(os.path.join(features_path, file))
         elif 'ids' in sp:
             ids = hkl.load(os.path.join(features_path, file))
 
