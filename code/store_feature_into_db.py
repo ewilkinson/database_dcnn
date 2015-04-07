@@ -15,6 +15,7 @@ caffe_root = '/home/takeshi//work/CS645/project/Caffe/caffe-master/'
 
 
 
+
 def store_feature(layer, compression):
 
     conn = psycopg2.connect(dbname="mydb", user="takeshi", password="asdfgh", host="127.0.0.1")
