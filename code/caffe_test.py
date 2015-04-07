@@ -40,7 +40,7 @@ mean = np.load(os.path.join(caffe_root, 'python/caffe/imagenet/ilsvrc_2012_mean.
 print mean
 
 net = caffe.Classifier(MODEL_FILE, PRETRAINED,
-                       mean=np.load(os.path.join(caffe_root, 'python/caffe/imagenet/ilsvrc_2012_mean.npy')).mean(1).mean(1),
+                       mean=np.load(os.path.join(caffe_root, 'python/caffe/imagenet/ilsvrc_2012_mean.npy')),
                        channel_swap=(2, 1, 0),
                        raw_scale=255,
                        image_dims=(256, 256))
@@ -65,14 +65,16 @@ print 'predicted class:', prediction[0].argmax()
 # plt.plot(prediction[0])
 # plt.show()
 
-filters = net.params['conv1'][0].data
-vis_square(filters.transpose(0, 2, 3, 1))
-plt.show()
+# filters = net.params['conv1'][0].data
+# vis_square(filters.transpose(0, 2, 3, 1))
+# plt.show()
 
 # get the first image's conv5 layer
 feat = net.blobs['pool5'].data[0]
 vis_square(feat, padval=1)
+plt.axis('off')
 plt.show()
+
 
 # load labels
 imagenet_labels_filename = os.path.join(caffe_root, 'data/ilsvrc12/synset_words.txt')

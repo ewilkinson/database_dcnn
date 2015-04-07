@@ -2,6 +2,7 @@ import caffe
 import numpy as np
 import os
 import hickle as hkl
+from sklearn import preprocessing
 
 # Simple generator for looping over an array in batches
 def batch_gen(data, batch_size):
@@ -41,7 +42,7 @@ def load_network(use_alexnet=True):
 
 if __name__ == '__main__':
     # ------------------------ Script Parameters ---------------------
-    use_alexnet = False
+    use_alexnet = True
     batch_size = 10
 
     # removed
@@ -119,3 +120,11 @@ if __name__ == '__main__':
 
         # Compare filesizes
         print 'compressed:   %i bytes' % os.path.getsize(file_path)
+
+        scaler = preprocessing.StandardScaler().fit(X)
+        file_name = layer  + '_scalar_gzip.hkl'
+        file_path = os.path.join(feature_dir, layer, file_name)
+        print 'Saving : ', file_path
+
+        # Dump data, with compression
+        hkl.dump(scaler, file_path, mode='w', compression='gzip')

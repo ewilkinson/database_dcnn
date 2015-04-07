@@ -49,7 +49,7 @@ def load_feature_layer(layer):
     Loads the feature layer specified
 
     :param layer: A member of utils.feature_layers
-    :return: X, ids
+    :return: X, ids, scalar
     """
     if not layer in feature_layers:
         raise NotImplementedError('Feature Layer Type Not Found.')
@@ -73,9 +73,10 @@ def load_feature_layer(layer):
             X = hkl.load(os.path.join(features_path, file))
         elif 'ids' in sp:
             ids = hkl.load(os.path.join(features_path, file))
+        elif 'scalar' in sp:
+            scalar = hkl.load(os.path.join(features_path, file))
 
     print 'Total Load Time for Layer : ',  layer
     print 'Time (s) : ', time.clock() - start_time
 
-    return X, ids
-
+    return X, ids, scalar
