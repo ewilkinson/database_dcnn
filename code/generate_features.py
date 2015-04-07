@@ -3,6 +3,7 @@ import numpy as np
 import os
 import hickle as hkl
 from sklearn import preprocessing
+import utils
 
 # Simple generator for looping over an array in batches
 def batch_gen(data, batch_size):
@@ -46,17 +47,14 @@ if __name__ == '__main__':
     batch_size = 10
 
     # removed
-    # feature_layers = ['conv3', 'conv4', 'fc6', 'fc7', 'pool2', 'pool1', 'pool5']
-    feature_layers = ['conv3', 'conv4', 'fc6', 'pool2', 'pool1', 'pool5']
+    # feature_layers = ['conv3', 'conv4', 'fc6', 'fc7', 'conv2', 'conv1', 'conv5']
 
-    img_dir = "../images/imagenet"
-    feature_dir = "../features"
+    feature_layers = utils.feature_layers
     # ------------------------ Script Parameters ---------------------
-
 
     net, params, blobs = load_network(use_alexnet)
 
-    image_files = os.listdir(img_dir)
+    image_files = os.listdir(utils.img_dir)
 
     N = len(image_files)
     print 'Total Files : ', N
@@ -66,7 +64,7 @@ if __name__ == '__main__':
         print 'Processing Layer : ' + layer
 
         file = image_files[0]
-        f0 = caffe.io.load_image(os.path.join(img_dir, file))
+        f0 = caffe.io.load_image(os.path.join(utils.img_dir, file))
         prediction = net.predict([f0])
         features = net.blobs[layer].data[0]
 
@@ -84,7 +82,7 @@ if __name__ == '__main__':
                 types.append(type)
                 img_ids.append(id)
 
-                file_image = caffe.io.load_image(os.path.join(img_dir, file))
+                file_image = caffe.io.load_image(os.path.join(utils.img_dir, file))
                 images.append(file_image)
 
 
@@ -101,7 +99,7 @@ if __name__ == '__main__':
                 count = count + 1
 
         file_name = layer  + '_X_gzip.hkl'
-        file_path = os.path.join(feature_dir, layer, file_name)
+        file_path = os.path.join(utils.feature_dir, layer, file_name)
         print 'Saving : ', file_path
 
         # Dump data, with compression
@@ -112,7 +110,7 @@ if __name__ == '__main__':
 
 
         file_name = layer  + '_ids_gzip.hkl'
-        file_path = os.path.join(feature_dir, layer, file_name)
+        file_path = os.path.join(utils.feature_dir, layer, file_name)
         print 'Saving : ', file_path
 
         # Dump data, with compression
@@ -123,7 +121,7 @@ if __name__ == '__main__':
 
         scaler = preprocessing.StandardScaler().fit(X)
         file_name = layer  + '_scalar_gzip.hkl'
-        file_path = os.path.join(feature_dir, layer, file_name)
+        file_path = os.path.join(utils.feature_dir, layer, file_name)
         print 'Saving : ', file_path
 
         # Dump data, with compression

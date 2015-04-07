@@ -17,9 +17,8 @@ def generate_pca_compression(X, n_components = 16, batch_size=100):
 
     pca = IncrementalPCA(n_components=n_components, batch_size=batch_size)
     pca.fit(X)
-    X_prime = pca.transform(X)
 
-    return X_prime, pca
+    return pca.transform(X), pca
 
 if __name__ == '__main__':
     import time

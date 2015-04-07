@@ -4,7 +4,7 @@ import os
 import time
 import hickle as hkl
 
-feature_layers = ['conv3', 'conv4', 'fc6', 'fc7', 'pool1', 'pool2', 'pool5']
+feature_layers = ['fc7', 'fc6', 'conv5', 'conv4', 'conv3','conv2', 'conv1']
 img_dir = "../images/imagenet"
 feature_dir = "../features"
 compression_dir = "../compression"
