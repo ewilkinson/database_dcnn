@@ -74,7 +74,7 @@ def load_feature_layer(layer):
         elif 'ids' in sp:
             ids = hkl.load(os.path.join(features_path, file))
         elif 'scalar' in sp:
-            scalar = hkl.load(os.path.join(features_path, file))
+            scalar = hkl.load(os.path.join(features_path, file), safe=False)
 
     print 'Total Load Time for Layer : ',  layer
     print 'Time (s) : ', time.clock() - start_time
