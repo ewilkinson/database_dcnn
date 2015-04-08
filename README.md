@@ -14,10 +14,12 @@ GNU General Public License
 Python Modules Needed 
 
 sudo pip install cython
-sudo pip install hickle
-sudo pip install psycopg2
-sudo pip install scikit-learn
 
+sudo pip install hickle
+
+sudo pip install psycopg2
+
+sudo pip install scikit-learn
 
 
 --------------------------------------------
