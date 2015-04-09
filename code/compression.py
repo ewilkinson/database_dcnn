@@ -1,5 +1,5 @@
 import utils
-from sklearn.decomposition import PCA, IncrementalPCA
+from sklearn.decomposition import KernelPCA, IncrementalPCA
 import numpy as np
 
 
@@ -19,6 +19,21 @@ def generate_pca_compression(X, n_components = 16, batch_size=100):
     pca.fit(X)
 
     return pca.transform(X), pca
+
+def generate_kpca_compression(X, n_components = 16):
+    """
+    Compresses the data using sklearn KernelPCA implementation.
+
+    :param X: Data (n_samples, n_features)
+    :param n_components: Number of dimensions for PCA to keep
+
+    :return: X_prime (the compressed representation), pca
+    """
+
+    kpca = KernelPCA(n_components=n_components, kernel='rbf', eigen_solver='arpack', fit_inverse_transform=False)
+    kpca.fit(X)
+
+    return kpca.transform(X), kpca
 
 if __name__ == '__main__':
     import time

@@ -47,7 +47,7 @@ if __name__ == '__main__':
     batch_size = 10
 
     # removed
-    # feature_layers = ['conv3', 'conv4', 'fc6', 'fc7', 'conv2', 'conv1', 'conv5']
+    # feature_layers = ['conv2', 'conv1']
 
     feature_layers = utils.feature_layers
     # ------------------------ Script Parameters ---------------------
