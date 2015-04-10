@@ -29,6 +29,8 @@ def store_feature(layers, compression):
         table_command = table_command[:-1] + ");"
         values_sql = values_sql[:-1] + ");"
         insert_command = insert_command[:-1] + ") " + values_sql
+
+        print table_command
         print insert_command
 
         cur.execute(table_command)
@@ -39,10 +41,6 @@ def store_feature(layers, compression):
         X, imagenet_ids, scalar = utils.load_feature_layer(layer)
 
         imagenet_ids = np.asarray(imagenet_ids, dtype='int64')
-        # debug only
-        X = X[0:1000, :]
-        imagenet_ids = imagenet_ids[0:1000]
-
         X = scalar.transform(X)
 
         transforms = []
