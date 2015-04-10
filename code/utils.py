@@ -4,19 +4,27 @@ import os
 import time
 import hickle as hkl
 
-feature_layers = ['fc7', 'fc6', 'pool5', 'conv4', 'conv3','pool2', 'pool1']
+feature_layers = ['fc7', 'fc6', 'pool5', 'conv4', 'conv3', 'pool2', 'pool1']
 img_dir = "../images/imagenet"
 feature_dir = "../features"
 compression_dir = "../compression"
 caffe_root = '/home/eric/caffe/caffe-master/'
 
+
+# database configuration
+user = 'YOUR_USR_NAME'
+password = 'YOUR_PASS'
+host = '127.0.0.1'
+dbname = 'mydb'
+
+
 # Simple generator for looping over an array in batches
 def batch_gen(data, batch_size):
     for i in range(0, len(data), batch_size):
-            yield data[i:i+batch_size]
+        yield data[i:i + batch_size]
+
 
 def load_network(use_alexnet=True):
-
     if use_alexnet:
         # Set the right path to your model definition file, pretrained model weights,
         # and the image you would like to classify.
@@ -44,6 +52,7 @@ def load_network(use_alexnet=True):
 
     return net, params, blobs
 
+
 def load_feature_layer(layer):
     """
     Loads the feature layer specified
@@ -54,8 +63,7 @@ def load_feature_layer(layer):
     if not layer in feature_layers:
         raise NotImplementedError('Feature Layer Type Not Found.')
 
-
-    features_path = os.path.join(feature_dir,layer)
+    features_path = os.path.join(feature_dir, layer)
     files = os.listdir(features_path)
     N = len(files)
 
@@ -65,7 +73,6 @@ def load_feature_layer(layer):
     # there is a holder file in each directory which needs to be removed
     files.remove('holder.txt')
 
-    
     start_time = time.clock()
     for file in files:
         sp = file.split('_')
@@ -76,7 +83,7 @@ def load_feature_layer(layer):
         elif 'scalar' in sp:
             scalar = hkl.load(os.path.join(features_path, file), safe=False)
 
-    print 'Total Load Time for Layer : ',  layer
+    print 'Total Load Time for Layer : ', layer
     print 'Time (s) : ', time.clock() - start_time
 
     return X, ids, scalar
