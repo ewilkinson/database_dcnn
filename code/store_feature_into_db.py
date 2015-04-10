@@ -78,7 +78,7 @@ def store_feature(layer, compression):
             # cur.execute("INSERT INTO feature32table (num, feature32) VALUES (%s, %s)", (i,X_prime[i].ravel().tolist(),))
             # string1 = "INSERT INTO " + feature_name + "table (num," + feature_name + ") VALUES(%s, %s)"
             #
-            #         #string1 = "INSERT INTO feature32table (num, feature32) VALUES (%s, %s)"
+            # #string1 = "INSERT INTO feature32table (num, feature32) VALUES (%s, %s)"
             #         cur.execute(string1, (i,X_prime[i].ravel().tolist(),))
             # elif feature_name == "feature64" :
             #     for i in range (rows) :
@@ -130,7 +130,7 @@ def store_feature(layer, compression):
     # elif layer == "conv4" :
     # cur.execute("select f32.id, f32.feature32, f64.feature64, f128.feature128, f256.feature256 into featuretableconv4 from feature32table as f32 left outer join feature64table as f64 on f32.id = f64.id left outer join feature128table as f128 on f64.id = f128.id left outer join feature256table as f256 on f128.id = f256.id;")
     # elif layer == "fc6" :
-    #     cur.execute("select f32.id, f32.feature32, f64.feature64, f128.feature128, f256.feature256 into featuretablefc6 from feature32table as f32 left outer join feature64table as f64 on f32.id = f64.id left outer join feature128table as f128 on f64.id = f128.id left outer join feature256table as f256 on f128.id = f256.id;")
+    # cur.execute("select f32.id, f32.feature32, f64.feature64, f128.feature128, f256.feature256 into featuretablefc6 from feature32table as f32 left outer join feature64table as f64 on f32.id = f64.id left outer join feature128table as f128 on f64.id = f128.id left outer join feature256table as f256 on f128.id = f256.id;")
     # elif layer == "fc7" :
     #     cur.execute("select f32.id, f32.feature32, f64.feature64, f128.feature128, f256.feature256 into featuretablefc7 from feature32table as f32 left outer join feature64table as f64 on f32.id = f64.id left outer join feature128table as f128 on f64.id = f128.id left outer join feature256table as f256 on f128.id = f256.id;")
     # elif layer == "pool1" :
@@ -192,7 +192,7 @@ if __name__ == '__main__':
 # images = []
 # print file
 # feature = np.load(feature_dir+'/'+layer_dir+'/'+file)
-#             feature2 = feature.ravel().tolist()
+# feature2 = feature.ravel().tolist()
 #             feature2 = feature2[0:100] # need to remove
 #             cur.execute("INSERT INTO test (num, data) VALUES (%s, %s)",(count,feature2))
 #             cur.execute("SELECT data FROM test;")

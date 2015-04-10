@@ -1,6 +1,7 @@
 /images/ILSVRC2012_devkit_t12/*
 /images/imagenet/*
-
+/.idea
 *.caffemodel
 *.npy
 *.hkl
+*.pyc
