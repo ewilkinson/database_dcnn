@@ -1,85 +1,73 @@
 import psycopg2
-import numpy as np
-import os
 import time
-import hickle as hkl
 import utils
+import numpy as np
 
-dimensions = [32, 64, 128, 256]
-
-def store_feature(layer, compression):
-
+def store_feature(layers, compression):
     conn = psycopg2.connect(dbname=utils.dbname, user=utils.user, password=utils.password, host=utils.host)
     cur = conn.cursor()
-    # cur.execute("DROP TABLE IF EXISTS featuretable;")
-
-    for condim in dimensions :
-        sqlcommand = "CREATE TABLE feature" + str(condim)+ "table (id serial PRIMARY KEY, num integer, feature" + str(condim) + " float8[]);"
-        cur.execute(sqlcommand);
-
-    X, ids = utils.load_feature_layer(layer)
-    X = X[0:1000,:]
-    ids = ids[0:1000]
-
-
-
-    pca_path = os.path.join(utils.compression_dir+"/" + compression + "/",layer)
-    files = os.listdir(pca_path)
-    N = len(files)
-
-    if N <= 1:
-        raise ValueError('Path provided contained no features : ' + pca_path)
-
-    # there is a holder file in each directory which needs to be removed
-    files.remove('holder.txt')
-
 
     start_time = time.clock()
-    for file in files:
-        pca = hkl.load(os.path.join(pca_path, file),safe=False)
-        n_components = pca.n_components_
-        pca.fit(X)
-        X_prime = pca.transform(X)
-        rows, cols = X_prime.shape
+    for layer in layers:
+        # CREATE THE TABLE
+        table_name = compression + '_' + layer
+        cur.execute("DROP TABLE IF EXISTS " + table_name + ";")
+        table_command = "CREATE TABLE " + table_name + " (id serial PRIMARY KEY, imagenet_id integer, "
+        insert_command = "INSERT INTO " + table_name + " (imagenet_id,"
+        values_sql = "VALUES(%s,"
 
-        sp = file.split('_')
-        feature_name = "feature"+sp[1];
+        dimensions = utils.get_dimension_options(layer, compression)
+        if len(dimensions) == 0:
+            print 'POSSIBLE ERROR: No dimensions loaded for ', layer, ' with ', compression
+            continue
 
-        sqlcommand = "INSERT INTO " + feature_name + "table (num," + feature_name + ") VALUES(%s, %s)"
-        print sqlcommand
+        for dim in dimensions:
+            table_command += " feature" + str(dim) + " float8[],"
+            insert_command += " feature" + str(dim) + ","
+            values_sql += "%s,"
 
-        for i in range (rows) :
-            cur.execute(sqlcommand, (i,X_prime[i].ravel().tolist(),))
+        table_command = table_command[:-1] + ");"
+        values_sql = values_sql[:-1] + ");"
+        insert_command = insert_command[:-1] + ") " + values_sql
+        print insert_command
 
-    sqlcommand = "select "
-    for condim in dimensions:
-        sqlcommand = sqlcommand + "f" + str(condim) + ".feature"+str(condim)
-        if condim != dimensions[len(dimensions)-1]:
-            sqlcommand = sqlcommand + ","
+        cur.execute(table_command)
 
-    sqlcommand = sqlcommand + " into featuretable" + compression + layer + " from "
+        # INSERT DATA INTO TABLE
 
-    for i in range(len(dimensions)):
-        condim = dimensions[i]
-        if condim == dimensions[0]:
-            sqlcommand = sqlcommand + " feature" + str(condim) + "table as f" +str(32)
-        else :
-            sqlcommand = sqlcommand + " left outer join feature" + str(condim) + "table as  " + "f" +str(condim) + " on f" + str(dimensions[i-1]) + ".id = " + "f" + str(condim) + ".id "
+        # load the data
+        X, imagenet_ids, scalar = utils.load_feature_layer(layer)
 
-    sqlcommand = sqlcommand + ";"
-    print sqlcommand
-    cur.execute(sqlcommand)
+        imagenet_ids = np.asarray(imagenet_ids, dtype='int64')
+        # debug only
+        X = X[0:1000, :]
+        imagenet_ids = imagenet_ids[0:1000]
 
-    for condim in dimensions :
-        sqlcommand = "DROP TABLE feature" + str(condim)+ "table;"
-        cur.execute(sqlcommand);
+        X = scalar.transform(X)
 
-    print 'DONE!'
+        transforms = []
+        # apply the compression algorithm
+        for dim in dimensions:
+            compressor = utils.load_compressor(layer,dim,compression)
+            transforms.append(compressor.transform(X))
+
+        value = []
+        for i in range(X.shape[0]):
+            value = [imagenet_ids[i]]
+            for X_prime in transforms:
+                value.append(X_prime[i,:].tolist())
+
+            cur.execute(insert_command, value)
+
     conn.commit()
     cur.close()
     conn.close()
 
+    print 'Done Creating Tables'
+    print 'Total Time : ', time.clock() - start_time
+
+
 if __name__ == '__main__':
-    layer = 'fc7'
+    layers = ['fc7']
     compression = 'pca'
-    store_feature(layer, compression)
+    store_feature(layers, compression)
