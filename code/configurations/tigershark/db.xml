@@ -1,0 +1,6 @@
+<db>
+    <user>postgres</user>
+    <password>zx10</password>
+    <name>ml</name>
+    <host>localhost</host>
+</db>
