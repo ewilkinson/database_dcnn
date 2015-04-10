@@ -4,15 +4,16 @@ import os
 import hickle as hkl
 from sklearn import preprocessing
 import utils
+import config
 
 # Simple generator for looping over an array in batches
 def batch_gen(data, batch_size):
     for i in range(0, len(data), batch_size):
-            yield data[i:i+batch_size]
+        yield data[i:i + batch_size]
+
 
 def load_network(use_alexnet=True):
-
-    caffe_root = '/home/eric/caffe/caffe-master/'  # this file is expected to be in {caffe_root}/examples
+    caffe_root = config.dirs('caffe_root')  # this file is expected to be in {caffe_root}/examples
 
     if use_alexnet:
         # Set the right path to your model definition file, pretrained model weights,
@@ -40,6 +41,7 @@ def load_network(use_alexnet=True):
     net.set_mode_gpu()
 
     return net, params, blobs
+
 
 if __name__ == '__main__':
     # ------------------------ Script Parameters ---------------------
@@ -85,7 +87,6 @@ if __name__ == '__main__':
                 file_image = caffe.io.load_image(os.path.join(utils.img_dir, file))
                 images.append(file_image)
 
-
             prediction = net.predict(images)
 
 
@@ -98,7 +99,7 @@ if __name__ == '__main__':
                 X[count, :] = features.ravel()
                 count = count + 1
 
-        file_name = layer  + '_X_gzip.hkl'
+        file_name = layer + '_X_gzip.hkl'
         file_path = os.path.join(utils.feature_dir, layer, file_name)
         print 'Saving : ', file_path
 
@@ -108,8 +109,7 @@ if __name__ == '__main__':
         # Compare filesizes
         print 'compressed:   %i bytes' % os.path.getsize(file_path)
 
-
-        file_name = layer  + '_ids_gzip.hkl'
+        file_name = layer + '_ids_gzip.hkl'
         file_path = os.path.join(utils.feature_dir, layer, file_name)
         print 'Saving : ', file_path
 
@@ -120,7 +120,7 @@ if __name__ == '__main__':
         print 'compressed:   %i bytes' % os.path.getsize(file_path)
 
         scaler = preprocessing.StandardScaler().fit(X)
-        file_name = layer  + '_scalar_gzip.hkl'
+        file_name = layer + '_scalar_gzip.hkl'
         file_path = os.path.join(utils.feature_dir, layer, file_name)
         print 'Saving : ', file_path
 
