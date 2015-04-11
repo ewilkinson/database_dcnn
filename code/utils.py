@@ -12,7 +12,7 @@ caffe_root = '/home/eric/caffe/caffe-master/'
 
 
 # database configuration
-user = 'YOUR_USR_NAME'
+user = 'USER_NAME'
 password = 'YOUR_PASS'
 host = '127.0.0.1'
 dbname = 'mydb'
@@ -25,7 +25,7 @@ def batch_gen(data, batch_size):
 
 
 def load_network(use_alexnet=True):
-    if use_alexnet:
+    if not use_alexnet:
         # Set the right path to your model definition file, pretrained model weights,
         # and the image you would like to classify.
         MODEL_FILE = '../caffe/bvlc_reference_caffenet/deploy.prototxt'
@@ -58,7 +58,7 @@ def load_feature_layer(layer):
     Loads the feature layer specified
 
     :param layer: A member of utils.feature_layers
-    :return: X, ids, scalar
+    :return: X, imagenet_ids, scalar
     """
     if not layer in feature_layers:
         raise NotImplementedError('Feature Layer Type Not Found.')
@@ -79,11 +79,57 @@ def load_feature_layer(layer):
         if 'X' in sp:
             X = hkl.load(os.path.join(features_path, file))
         elif 'ids' in sp:
-            ids = hkl.load(os.path.join(features_path, file))
+            imagenet_ids = hkl.load(os.path.join(features_path, file))
         elif 'scalar' in sp:
             scalar = hkl.load(os.path.join(features_path, file), safe=False)
 
     print 'Total Load Time for Layer : ', layer
     print 'Time (s) : ', time.clock() - start_time
 
-    return X, ids, scalar
+    return X, imagenet_ids, scalar
+
+def get_dimension_options(layer, compression):
+    if not layer in feature_layers:
+        raise NotImplementedError('Feature Layer Type Not Found.')
+
+    compresion_path = os.path.join(compression_dir, compression, layer)
+    files = os.listdir(compresion_path)
+    N = len(files)
+
+    if N <= 1:
+        raise ValueError('Path provided contained no stored algorithms : ' + compresion_path)
+
+    # there is a holder file in each directory which needs to be removed
+    files.remove('holder.txt')
+
+    dimensions = []
+    for file in files:
+        name, dim, postfix = file.split('_')
+        dimensions.append(int(dim))
+
+    return dimensions
+
+
+def load_compressor(layer, dimension, compression):
+    """
+    Loads the compression algorithm from the file system
+
+    :param layer: Feature layer
+
+    :type dimension: int
+    :param dimension: n_components of compressor
+
+    :type compression: str
+    :param compression: Compressional algorithm ID
+
+    :return: Compression algorithm
+    """
+    if not layer in feature_layers:
+        raise NotImplementedError('Feature Layer Type Not Found.')
+
+    compression_path = os.path.join(compression_dir, compression, layer)
+    file_name = compression + '_' + str(dimension) + '_gzip.hkl'
+
+    file_path = os.path.join(compression_path, file_name)
+
+    return hkl.load(file_path, safe=False)
