@@ -77,14 +77,13 @@ plt.show()
 
 
 # load labels
-imagenet_labels_filename = os.path.join(caffe_root, 'data/ilsvrc12/synset_words.txt')
+imagenet_labels_filename = os.path.join('../caffe/synset_words.txt')
 try:
     labels = np.loadtxt(imagenet_labels_filename, str, delimiter='\t')
 except:
     import subprocess
-
-    subprocess.call(['../data/ilsvrc12/get_ilsvrc_aux.sh'])
-    labels = np.loadtxt(imagenet_labels_filename, str, delimiter='\t')
+    # subprocess.call(['../data/ilsvrc12/get_ilsvrc_aux.sh'])
+    # labels = np.loadtxt(imagenet_labels_filename, str, delimiter='\t')
 
 # sort top k predictions from softmax output
 top_k = net.blobs['prob'].data[4].flatten().argsort()[-1:-6:-1]

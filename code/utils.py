@@ -4,6 +4,9 @@ import os
 import time
 import hickle as hkl
 
+
+use_alexnet = True
+
 feature_layers = ['fc7', 'fc6', 'pool5', 'conv4', 'conv3', 'pool2', 'pool1']
 img_dir = "../images/imagenet"
 feature_dir = "../features"
@@ -38,6 +41,36 @@ def get_dimension_options(layer, compression):
 
     return dimensions
 
+def load_english_labels():
+    """
+    Returns a dictionary from class # to the english label.
+    :return:
+    """
+    imagenet_labels_filename = os.path.join('../caffe/synset_words.txt')
+    try:
+        labels = np.loadtxt(imagenet_labels_filename, str, delimiter='\t')
+    except:
+        raise ValueError('Could not find synset_works in the correct place.')
+
+    return labels
+
+def load_class_labels():
+    fo = open("../caffe/val.txt", "r+")
+
+    # remove the /n
+    content = fo.read().splitlines()
+
+    labels = np.zeros((50001, 1), dtype='int32')
+
+    for line in content:
+        image, klass = line.split(' ')
+        year, type, postfix = image.split('_')
+        id, file_type = postfix.split('.')
+        labels[id,:] = int(klass)
+
+    fo.close()
+
+    return labels
 
 def load_compressor(layer, dimension, compression):
     """
@@ -70,7 +103,7 @@ def batch_gen(data, batch_size):
         yield data[i:i + batch_size]
 
 
-def load_network(use_alexnet=True):
+def load_network():
     if not use_alexnet:
         # Set the right path to your model definition file, pretrained model weights,
         # and the image you would like to classify.
