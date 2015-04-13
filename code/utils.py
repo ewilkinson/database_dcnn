@@ -22,6 +22,18 @@ dbname = 'mydb'
 
 
 def get_dimension_options(layer, compression):
+    """
+    Returns an array of all the possible compression sizes for that layer / compression pair
+
+    :type layer: str
+    :param layer: feature layer
+
+    :type compression: str
+    :param compression: compression type identifier (pca, kpca, etc.)
+
+    :rtype: array-like
+    :return: dimensions
+    """
     if not layer in feature_layers:
         raise NotImplementedError('Feature Layer Type Not Found.')
 
@@ -46,7 +58,8 @@ def get_dimension_options(layer, compression):
 def load_english_labels():
     """
     Returns a dictionary from class # to the english label.
-    :return:
+
+    :return: labels
     """
     imagenet_labels_filename = os.path.join('../caffe/synset_words.txt')
     try:
@@ -57,7 +70,12 @@ def load_english_labels():
     return labels
 
 
-def load_class_labels():
+def load_val_class_labels():
+    """
+    Return all the class labels for the validation set.
+
+    :return: labels
+    """
     fo = open("../caffe/val.txt", "r+")
 
     # remove the /n
@@ -108,6 +126,11 @@ def batch_gen(data, batch_size):
 
 
 def load_network():
+    """
+    Loads the caffe network. The type of network loaded is specified in the utils file.
+
+    :return: caffe network
+    """
     if not use_alexnet:
         # Set the right path to your model definition file, pretrained model weights,
         # and the image you would like to classify.
@@ -153,9 +176,6 @@ def load_feature_layer(layer):
     if N <= 1:
         raise ValueError('Path provided contained no features : ' + features_path)
 
-    # there is a holder file in each directory which needs to be removed
-    files.remove('holder.txt')
-
     start_time = time.clock()
     for file in files:
         sp = file.split('_')
@@ -171,6 +191,14 @@ def load_feature_layer(layer):
 
 
 def load_scalar(layer):
+    """
+    Load the feature mean / variance scalar for the input layer
+
+    :type layer: str
+    :param layer: Feature layer
+
+    :return: scalar
+    """
     if not layer in feature_layers:
         raise NotImplementedError('Feature Layer Type Not Found.')
 
@@ -181,16 +209,9 @@ def load_scalar(layer):
     if N <= 1:
         raise ValueError('Path provided contained no features : ' + features_path)
 
-    # there is a holder file in each directory which needs to be removed
-    files.remove('holder.txt')
-
-    start_time = time.clock()
     for file in files:
         sp = file.split('_')
         if 'scalar' in sp:
             scalar = hkl.load(os.path.join(features_path, file), safe=False)
-
-    print 'Total Load Time for Layer : ', layer
-    print 'Time (s) : ', time.clock() - start_time
 
     return scalar
