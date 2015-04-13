@@ -42,6 +42,7 @@ if __name__ == '__main__':
     n_components = 128
 
     X, ids = utils.load_feature_layer(layer)
+    scalar = utils.load_scalar(layer)
     X = X[0:1000,:]
     ids = ids[0:1000]
 

@@ -9,6 +9,7 @@ if __name__ == '__main__':
     # ------------------------ Script Parameters ---------------------
     batch_size = 10
     feature_layers = utils.feature_layers
+    feature_layers = ['fc7']
     # ------------------------ Script Parameters ---------------------
 
     net, params, blobs = utils.load_network()
@@ -24,7 +25,7 @@ if __name__ == '__main__':
 
         file = image_files[0]
         f0 = caffe.io.load_image(os.path.join(utils.img_dir, file))
-        prediction = net.predict([f0])
+        prediction = net.predict([f0], oversample=False)
         features = net.blobs[layer].data[0]
 
         X = np.zeros((N, features.size), dtype='float32')
@@ -32,6 +33,10 @@ if __name__ == '__main__':
 
         count = 0
         for files in utils.batch_gen(image_files, batch_size=batch_size):
+
+            if count % 1000 == 0:
+                print 'Processing Layer : ' + layer + " Count : ", count
+
             years, types, img_ids = [], [], []
             images = []
             for file in files:
@@ -45,14 +50,12 @@ if __name__ == '__main__':
                 images.append(file_image)
 
 
-            prediction = net.predict(images)
+            prediction = net.predict(images, oversample=False)
 
             # save out all the features
             for i in range(batch_size):
                 ids[count] = img_ids[i]
-
-                features = net.blobs[layer].data[i]
-                X[count, :] = features.ravel()
+                X[count, :] = net.blobs[layer].data[i].ravel()
                 count = count + 1
 
         file_name = layer  + '_X_gzip.hkl'
@@ -64,7 +67,6 @@ if __name__ == '__main__':
 
         # Compare filesizes
         print 'compressed:   %i bytes' % os.path.getsize(file_path)
-
 
         file_name = layer  + '_ids_gzip.hkl'
         file_path = os.path.join(utils.feature_dir, layer, file_name)

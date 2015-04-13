@@ -20,6 +20,7 @@ password = 'YOUR_PASS'
 host = '127.0.0.1'
 dbname = 'mydb'
 
+
 def get_dimension_options(layer, compression):
     if not layer in feature_layers:
         raise NotImplementedError('Feature Layer Type Not Found.')
@@ -41,6 +42,7 @@ def get_dimension_options(layer, compression):
 
     return dimensions
 
+
 def load_english_labels():
     """
     Returns a dictionary from class # to the english label.
@@ -54,6 +56,7 @@ def load_english_labels():
 
     return labels
 
+
 def load_class_labels():
     fo = open("../caffe/val.txt", "r+")
 
@@ -66,11 +69,12 @@ def load_class_labels():
         image, klass = line.split(' ')
         year, type, postfix = image.split('_')
         id, file_type = postfix.split('.')
-        labels[id,:] = int(klass)
+        labels[id, :] = int(klass)
 
     fo.close()
 
     return labels
+
 
 def load_compressor(layer, dimension, compression):
     """
@@ -137,7 +141,7 @@ def load_feature_layer(layer):
     Loads the feature layer specified
 
     :param layer: A member of utils.feature_layers
-    :return: X, imagenet_ids, scalar
+    :return: X, imagenet_ids
     """
     if not layer in feature_layers:
         raise NotImplementedError('Feature Layer Type Not Found.')
@@ -159,10 +163,34 @@ def load_feature_layer(layer):
             X = hkl.load(os.path.join(features_path, file))
         elif 'ids' in sp:
             imagenet_ids = hkl.load(os.path.join(features_path, file))
-        elif 'scalar' in sp:
+
+    print 'Total Load Time for Layer : ', layer
+    print 'Time (s) : ', time.clock() - start_time
+
+    return X, imagenet_ids
+
+
+def load_scalar(layer):
+    if not layer in feature_layers:
+        raise NotImplementedError('Feature Layer Type Not Found.')
+
+    features_path = os.path.join(feature_dir, layer)
+    files = os.listdir(features_path)
+    N = len(files)
+
+    if N <= 1:
+        raise ValueError('Path provided contained no features : ' + features_path)
+
+    # there is a holder file in each directory which needs to be removed
+    files.remove('holder.txt')
+
+    start_time = time.clock()
+    for file in files:
+        sp = file.split('_')
+        if 'scalar' in sp:
             scalar = hkl.load(os.path.join(features_path, file), safe=False)
 
     print 'Total Load Time for Layer : ', layer
     print 'Time (s) : ', time.clock() - start_time
 
-    return X, imagenet_ids, scalar
+    return scalar
