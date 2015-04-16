@@ -8,7 +8,7 @@ import hickle as hkl
 use_alexnet = True
 
 feature_layers = ['fc7', 'fc6', 'pool5', 'conv4', 'conv3', 'pool2', 'pool1']
-img_dir = "../images/imagenet"
+img_dir = "../images/training_images"
 feature_dir = "../features"
 compression_dir = "../compression"
 caffe_root = '/home/eric/caffe/caffe-master/'
@@ -81,18 +81,36 @@ def load_val_class_labels():
     # remove the /n
     content = fo.read().splitlines()
 
-    labels = np.zeros((50001, 1), dtype='int32')
+    labels = {}
 
     for line in content:
         image, klass = line.split(' ')
-        year, type, postfix = image.split('_')
-        id, file_type = postfix.split('.')
-        labels[id, :] = int(klass)
+        labels[image] = int(klass)
 
     fo.close()
 
     return labels
 
+def load_train_class_labels():
+    """
+    Return all the class labels for the training set.
+
+    :return: labels
+    """
+    fo = open("../caffe/train_without_dir.txt", "r+")
+
+    # remove the /n
+    content = fo.read().splitlines()
+
+    labels = {}
+
+    for line in content:
+        image, klass = line.split(' ')
+        labels[image] = int(klass)
+
+    fo.close()
+
+    return labels
 
 def load_compressor(layer, dimension, compression):
     """

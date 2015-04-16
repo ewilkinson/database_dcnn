@@ -9,7 +9,7 @@ if __name__ == '__main__':
     # ------------------------ Script Parameters ---------------------
     batch_size = 10
     feature_layers = utils.feature_layers
-    feature_layers = ['fc7']
+    # feature_layers = ['fc7']
     # ------------------------ Script Parameters ---------------------
 
     net, params, blobs = utils.load_network()
@@ -29,7 +29,7 @@ if __name__ == '__main__':
         features = net.blobs[layer].data[0]
 
         X = np.zeros((N, features.size), dtype='float32')
-        ids = np.zeros((N, ), dtype='int32')
+        ids = []
 
         count = 0
         for files in utils.batch_gen(image_files, batch_size=batch_size):
@@ -37,15 +37,8 @@ if __name__ == '__main__':
             if count % 1000 == 0:
                 print 'Processing Layer : ' + layer + " Count : ", count
 
-            years, types, img_ids = [], [], []
             images = []
             for file in files:
-                year, type, postfix = file.split('_')
-                id, file_type = postfix.split('.')
-                years.append(year)
-                types.append(type)
-                img_ids.append(id)
-
                 file_image = caffe.io.load_image(os.path.join(utils.img_dir, file))
                 images.append(file_image)
 
@@ -54,7 +47,7 @@ if __name__ == '__main__':
 
             # save out all the features
             for i in range(batch_size):
-                ids[count] = img_ids[i]
+                ids.append(files[i])
                 X[count, :] = net.blobs[layer].data[i].ravel()
                 count = count + 1
 
