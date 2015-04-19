@@ -5,7 +5,7 @@ CREATE FUNCTION distance2 (a float8[], b float8[] )
   RETURNS float8
 AS $$
   import numpy as np
-  c = sum(abs(np.asarray(a)-np.asarray(b)))
+  c = np.sum(np.square(np.asarray(a)-np.asarray(b)))
   return c
 $$ LANGUAGE plpythonu;
 

@@ -9,6 +9,7 @@ use_alexnet = True
 
 feature_layers = ['fc7', 'fc6', 'pool5', 'conv4', 'conv3', 'pool2', 'pool1']
 img_dir = "../images/training_images"
+test_dir = "../images/imagenet"
 feature_dir = "../features"
 compression_dir = "../compression"
 caffe_root = '/home/eric/caffe/caffe-master/'
@@ -70,9 +71,10 @@ def load_english_labels():
     return labels
 
 
-def load_val_class_labels():
+def load_test_class_labels():
     """
-    Return all the class labels for the validation set.
+    Return all the class labels for the test set. Note that we are using the validation images as the test set
+    since they come with labels
 
     :return: labels
     """
@@ -137,8 +139,18 @@ def load_compressor(layer, dimension, compression):
     return hkl.load(file_path, safe=False)
 
 
-# Simple generator for looping over an array in batches
 def batch_gen(data, batch_size):
+    """
+    Simple generator for looping over an array in batches
+
+    :type data: array-like
+    :param data:
+
+    :type batch_size: int
+    :param batch_size:
+
+    :return: generator
+    """
     for i in range(0, len(data), batch_size):
         yield data[i:i + batch_size]
 
@@ -233,3 +245,28 @@ def load_scalar(layer):
             scalar = hkl.load(os.path.join(features_path, file), safe=False)
 
     return scalar
+
+
+def generate_test_set(n=1000):
+    """
+    Store the pointers to the files to be used in the test set.
+
+    :param n: The number of files from the validation set to use as the test set.
+    :return:
+    """
+    import random
+
+    image_files = os.listdir(test_dir)
+    N = len(image_files)
+    random.shuffle(image_files)
+    image_files = image_files[:n]
+
+    hkl.dump(image_files, "../images/test_set.hkl", mode='w')
+
+def load_test_set():
+    """
+    Returns a list of files to images
+
+    :return:
+    """
+    return hkl.load("../images/test_set.hkl", safe=False)

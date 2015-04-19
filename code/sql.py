@@ -1,7 +1,7 @@
 import psycopg2
 import time
 import utils
-import numpy as np
+
 
 def store_feature(layers, compression):
     conn = psycopg2.connect(dbname=utils.dbname, user=utils.user, password=utils.password, host=utils.host)
@@ -15,7 +15,7 @@ def store_feature(layers, compression):
         table_name = create_table_name(compression, layer)
         cur.execute("DROP TABLE IF EXISTS " + table_name + ";")
         table_command = "CREATE TABLE " + table_name + " (id serial PRIMARY KEY, file text, class integer, "
-        insert_command = "INSERT INTO " + table_name + " (file, integer"
+        insert_command = "INSERT INTO " + table_name + " (file, class,"
         values_sql = "VALUES(%s,%s,"
 
         dimensions = utils.get_dimension_options(layer, compression)
@@ -48,21 +48,20 @@ def store_feature(layers, compression):
         transforms = []
         # apply the compression algorithm
         for dim in dimensions:
-            compressor = utils.load_compressor(layer,dim,compression)
+            compressor = utils.load_compressor(layer, dim, compression)
             transforms.append(compressor.transform(X))
-
 
         value = []
         for i in range(X.shape[0]):
             file_name = imagenet_ids[i]
             value = [file_name, train_labels[file_name]]
             for X_prime in transforms:
-                value.append(X_prime[i,:].tolist())
+                value.append(X_prime[i, :].tolist())
 
             cur.execute(insert_command, value)
 
         conn.commit()
-    
+
     cur.close()
     conn.close()
 
@@ -71,15 +70,35 @@ def store_feature(layers, compression):
 
 
 def query_top_k(k, features, compression, layer, dimension):
+    """
+    Returns top k results according to the distance2 function
+
+    Results are of the form [(file, class, distance)] sorted with closest item at 0
+
+    :type k: int
+    :param k: top k items returns
+    :param features:
+
+    :type compression: str
+    :param compression: compression type identifier
+
+    :type layer: str
+    :param layer: feature layer
+
+    :type dimension: int
+    :param dimension: feature dimensionality
+
+    :return:
+    """
     if dimension != features.size:
         raise ValueError('Feature size did not match dimension of query requested.')
 
     conn = psycopg2.connect(dbname=utils.dbname, user=utils.user, password=utils.password, host=utils.host)
     cur = conn.cursor()
 
-    sql_command = "SELECT imagenet_id, distance2(%s," + create_feature_name(dimension) + ") as D FROM " + create_table_name(compression, layer) + " ORDER BY D ASC LIMIT " + str(k)
+    sql_command = "SELECT file, class, distance2(%s," + create_feature_name(
+        dimension) + ") as D FROM " + create_table_name(compression, layer) + " ORDER BY D ASC LIMIT " + str(k)
     print sql_command
-
     cur.execute(sql_command, [features.tolist()])
 
     results = cur.fetchall()
@@ -89,16 +108,22 @@ def query_top_k(k, features, compression, layer, dimension):
 
     return results
 
+
 def create_table_name(compression, layer):
     return compression + '_' + layer
+
 
 def create_feature_column(dim):
     return " feature" + str(dim) + " float8[],"
 
+
 def create_feature_name(dim):
     return " feature" + str(dim)
-    
+
+
 if __name__ == '__main__':
     layers = ['fc7']
     compression = 'pca'
     store_feature(layers, compression)
+
+
