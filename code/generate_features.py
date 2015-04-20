@@ -1,7 +1,6 @@
 import caffe
 import numpy as np
 import os
-import hickle as hkl
 from sklearn import preprocessing
 import utils
 
@@ -51,30 +50,7 @@ if __name__ == '__main__':
                 X[count, :] = net.blobs[layer].data[i].ravel()
                 count = count + 1
 
-        file_name = layer  + '_X_gzip.hkl'
-        file_path = os.path.join(utils.feature_dir, layer, file_name)
-        print 'Saving : ', file_path
-
-        # Dump data, with compression
-        hkl.dump(X, file_path, mode='w', compression='gzip')
-
-        # Compare filesizes
-        print 'compressed:   %i bytes' % os.path.getsize(file_path)
-
-        file_name = layer  + '_ids_gzip.hkl'
-        file_path = os.path.join(utils.feature_dir, layer, file_name)
-        print 'Saving : ', file_path
-
-        # Dump data, with compression
-        hkl.dump(ids, file_path, mode='w', compression='gzip')
-
-        # Compare filesizes
-        print 'compressed:   %i bytes' % os.path.getsize(file_path)
+        utils.dump_feature_layer(layer=layer, X=X, ids=ids)
 
         scaler = preprocessing.StandardScaler().fit(X)
-        file_name = layer  + '_scalar_gzip.hkl'
-        file_path = os.path.join(utils.feature_dir, layer, file_name)
-        print 'Saving : ', file_path
-
-        # Dump data, with compression
-        hkl.dump(scaler, file_path, mode='w', compression='gzip')
+        utils.dump_scalar(layer=layer, scalar=scaler)

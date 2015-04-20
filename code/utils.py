@@ -12,6 +12,7 @@ img_dir = "../images/training_images"
 test_dir = "../images/imagenet"
 feature_dir = "../features"
 compression_dir = "../compression"
+distances_dir = "../distances"
 caffe_root = '/home/eric/caffe/caffe-master/'
 
 
@@ -114,11 +115,37 @@ def load_train_class_labels():
 
     return labels
 
+def dump_compressor(layer, pca, compression_type, n_components):
+    """
+    Dumps the compressor
+
+    :type layer: str
+    :param layer: feature layer
+
+    :param pca:
+
+    :type compression_type: str
+    :param compression_type:
+
+    :type n_components: int
+    :param n_components:
+
+    :return:
+    """
+    dir_path = os.path.join(compression_dir, compression_type, layer)
+    file_name = compression_type + '_'  + str(n_components) + '_gzip.hkl'
+
+    file_path = os.path.join(dir_path, file_name)
+    print 'Saving to : ', file_path
+
+    hkl.dump(pca, file_path, mode='w', compression='gzip')
+
 def load_compressor(layer, dimension, compression):
     """
     Loads the compression algorithm from the file system
 
-    :param layer: Feature layer
+    :type layer: str
+    :param layer: feature layer
 
     :type dimension: int
     :param dimension: n_components of compressor
@@ -189,6 +216,41 @@ def load_network():
     return net, params, blobs
 
 
+def dump_feature_layer(layer, X, ids):
+    """
+    Saves out the feature layer using hickle
+
+    :type layer: str
+    :param layer: feature layer
+
+    :type X: array_like
+    :param X: feature values
+
+    :type ids: array_like
+    :param ids: file identifiers
+
+    :return:
+    """
+    file_name = layer  + '_X_gzip.hkl'
+    file_path = os.path.join(feature_dir, layer, file_name)
+    print 'Saving : ', file_path
+
+    # Dump data, with compression
+    hkl.dump(X, file_path, mode='w', compression='gzip')
+
+    # Compare filesizes
+    print 'compressed:   %i bytes' % os.path.getsize(file_path)
+
+    file_name = layer  + '_ids_gzip.hkl'
+    file_path = os.path.join(feature_dir, layer, file_name)
+    print 'Saving : ', file_path
+
+    # Dump data, with compression
+    hkl.dump(ids, file_path, mode='w', compression='gzip')
+
+    # Compare filesizes
+    print 'compressed:   %i bytes' % os.path.getsize(file_path)
+
 def load_feature_layer(layer):
     """
     Loads the feature layer specified
@@ -219,6 +281,24 @@ def load_feature_layer(layer):
 
     return X, imagenet_ids
 
+def dump_scaler(layer, scaler):
+    """
+    Dumps the scalar
+
+    :type layer: str
+    :param layer: Feature layer
+
+    :type: sklearn.preprocessing.StandardScalar()
+    :param scaler:
+
+    :return:
+    """
+    file_name = layer  + '_scalar_gzip.hkl'
+    file_path = os.path.join(feature_dir, layer, file_name)
+    print 'Saving : ', file_path
+
+    # Dump data, with compression
+    hkl.dump(scaler, file_path, mode='w', compression='gzip')
 
 def load_scalar(layer):
     """
@@ -261,7 +341,7 @@ def generate_test_set(n=1000):
     random.shuffle(image_files)
     image_files = image_files[:n]
 
-    hkl.dump(image_files, "../images/test_set.hkl", mode='w')
+    hkl.dump(image_files, os.path.join(img_dir, "test_set.hkl"), mode='w')
 
 def load_test_set():
     """
@@ -269,4 +349,30 @@ def load_test_set():
 
     :return:
     """
-    return hkl.load("../images/test_set.hkl", safe=False)
+    return hkl.load(os.path.join(img_dir, "test_set.hkl"), safe=False)
+
+def load_distance_matrix(layer):
+    """
+    Returns the distance matrix as defined by the features of the provided layer
+    Note that this must be generated beforehand using generate_dist_func
+
+    :type layer: str
+    :param layer: Feature layer
+
+    :return: numpy array
+    """
+    return hkl.load(os.path.join(distances_dir, 'dist_matrix_' + layer + '.hkl'))
+
+def dump_distance_matrix(layer, dist_matrix):
+    """
+    Writes the distance matrix to the appropriate location
+
+    :type layer: str
+    :param layer: Feature layer
+
+    :type dist_matrix: array-like
+    :param dist_matrix:
+
+    :return:
+    """
+    hkl.dump(dist_matrix, os.path.join(distances_dir, 'dist_matrix_' + layer + '.hkl'))

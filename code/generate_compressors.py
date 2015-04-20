@@ -3,8 +3,6 @@ __author__ = 'eric'
 import utils
 from compression import generate_pca_compression, generate_kpca_compression
 import time
-import os
-import hickle as hkl
 
 if __name__ == '__main__':
 
@@ -14,8 +12,8 @@ if __name__ == '__main__':
 
     compression_type = 'pca'
 
-    # feature_layers = utils.feature_layers
-    feature_layers = ['fc7']
+    feature_layers = utils.feature_layers
+    # feature_layers = ['fc7']
     dimensions = [32,64,128,256,512]
     ipca_batch_size = 1000
 
@@ -26,7 +24,6 @@ if __name__ == '__main__':
 
         # zero and normalize the data
         X = scalar.transform(X)
-        dir_path = os.path.join(utils.compression_dir, compression_type, layer)
 
         for n_components in dimensions:
 
@@ -44,11 +41,8 @@ if __name__ == '__main__':
 
             print 'X - Prime Shape', X_prime.shape
 
-            file_name = compression_type + '_'  + str(n_components) + '_gzip.hkl'
+            utils.dump_compressor(layer,pca,compression_type,n_components)
 
-            file_path = os.path.join(dir_path, file_name)
-            print 'Saving to : ', file_path
 
-            hkl.dump(pca, file_path, mode='w', compression='gzip')
 
 
