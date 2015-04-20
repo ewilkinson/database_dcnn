@@ -1,6 +1,9 @@
 /images/ILSVRC2012_devkit_t12/*
 /images/imagenet/*
+/images/training_images/*
+
+/features/**/*.hkl
 
 *.caffemodel
 *.npy
-*.hkl
+*.JPEG
