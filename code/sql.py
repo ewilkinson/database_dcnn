@@ -98,7 +98,6 @@ def query_top_k(k, features, compression, layer, dimension):
 
     sql_command = "SELECT file, class, distance2(%s," + create_feature_name(
         dimension) + ") as D FROM " + create_table_name(compression, layer) + " ORDER BY D ASC LIMIT " + str(k)
-    print sql_command
     cur.execute(sql_command, [features.tolist()])
 
     results = cur.fetchall()
@@ -122,7 +121,7 @@ def create_feature_name(dim):
 
 
 if __name__ == '__main__':
-    layers = ['fc7']
+    layers = ['fc7', 'fc6', 'pool5', 'conv4', 'conv3']
     compression = 'pca'
     store_feature(layers, compression)
 
