@@ -182,6 +182,35 @@ def query_top_k(k, features, compression, layer, dimension):
 
     return results
 
+def retrieve_compression_features(compression, layer, dimension):
+    """
+    Results are of the form [(file, class, feat)] sorted with closest item at 0
+
+    :type compression: str
+    :param compression: compression type identifier
+
+    :type layer: str
+    :param layer: feature layer
+
+    :type dimension: int
+    :param dimension: feature dimensionality
+
+    :return: results
+    """
+    conn = psycopg2.connect(dbname=utils.dbname, user=utils.user, password=utils.password, host=utils.host)
+    cur = conn.cursor()
+
+    sql_command = "SELECT file, class, " + create_feature_name(dimension) + " FROM " + create_table_name(compression, layer) + ";"
+    cur.execute(sql_command)
+
+    results = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return results
+
+
 
 def create_table_name(compression, layer):
     return compression + '_' + layer
