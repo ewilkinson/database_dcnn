@@ -68,6 +68,81 @@ def store_feature(layers, compression):
     print 'Done Creating Tables'
     print 'Total Time : ', time.clock() - start_time
 
+def store_instances(layers, compression):
+    conn = psycopg2.connect(dbname=utils.dbname, user=utils.user, password=utils.password, host=utils.host)
+    cur = conn.cursor()
+
+    start_time = time.clock()
+
+    for layer in layers:
+        # CREATE THE TABLE
+        table_name = create_table_name(compression, layer)
+        insert_command = "INSERT INTO " + table_name + " (file, class,"
+        values_sql = "VALUES(%s,%s,"
+
+        dimensions = utils.get_dimension_options(layer, compression)
+        if len(dimensions) == 0:
+            print 'POSSIBLE ERROR: No dimensions loaded for ', layer, ' with ', compression
+            continue
+
+        for dim in dimensions:
+            insert_command += create_feature_name(dim) + ","
+            values_sql += "%s,"
+
+        values_sql = values_sql[:-1] + ");"
+        insert_command = insert_command[:-1] + ") " + values_sql
+
+        print insert_command
+
+        # INSERT DATA INTO TABLE
+
+        # load the data
+        X, ids = utils.load_instance_features(layer)
+        scalar = utils.load_scalar(layer)
+
+        X = scalar.transform(X)
+
+        transforms = []
+        # apply the compression algorithm
+        for dim in dimensions:
+            compressor = utils.load_compressor(layer, dim, compression)
+            transforms.append(compressor.transform(X))
+
+        value = []
+        for i in range(X.shape[0]):
+            file_name = ids[i]
+            value = [file_name, -1]
+            for X_prime in transforms:
+                value.append(X_prime[i, :].tolist())
+
+            cur.execute(insert_command, value)
+
+        conn.commit()
+
+    cur.close()
+    conn.close()
+
+    print 'Total Time : ', time.clock() - start_time
+
+def drop_instances(layers, compression):
+    conn = psycopg2.connect(dbname=utils.dbname, user=utils.user, password=utils.password, host=utils.host)
+    cur = conn.cursor()
+
+    start_time = time.clock()
+
+    for layer in layers:
+        # CREATE THE TABLE
+        table_name = create_table_name(compression, layer)
+        delete_command = "DELETE FROM " + table_name + " WHERE class = -1;"
+        cur.execute(delete_command)
+        conn.commit()
+
+    cur.close()
+    conn.close()
+
+    print 'Total Time : ', time.clock() - start_time
+
+
 
 def query_top_k(k, features, compression, layer, dimension):
     """

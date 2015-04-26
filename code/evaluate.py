@@ -3,7 +3,6 @@ import utils
 import os, time
 import caffe
 import numpy as np
-import hickle as hkl
 
 # ------------------------------------------------
 # Script Params
@@ -11,12 +10,13 @@ import hickle as hkl
 
 compression_types = ['pca']
 
-distance_matrix_layer = 'pool5'
+distance_matrix_layer = 'fc7'
 
 # feature_layers = utils.feature_layers
-feature_layers = ['fc7', 'fc6', 'pool5', 'conv4', 'conv3']
-dimensions = [32,64,128,256,512]
-# dimensions = [512]
+# feature_layers = ['fc7', 'fc6', 'pool5', 'conv4', 'conv3']
+feature_layers = ['fc7', 'pool5']
+# dimensions = [16,32,64,128,256]
+dimensions = [64, 128]
 
 # top k items to be retrieved and measured
 k = 5
@@ -48,7 +48,7 @@ for c_type in compression_types:
     for layer in feature_layers:
         results[c_type][layer] = {}
         for n_components in dimensions:
-            results[c_type][layer][n_components] = {'similarity_dist': 0, 'avg_time': 0}
+            results[c_type][layer][n_components] = {'similarity_dist': [], 'avg_time': []}
 
 for c_type in compression_types:
     for layer in feature_layers:
@@ -63,11 +63,10 @@ for c_type in compression_types:
             for t_files in utils.batch_gen(test_files, batch_size=batch_size):
 
                 if count % 50 == 0:
-                    similarity_dist = results[c_type][layer][n_components]['similarity_dist']
-                    avg_time = results[c_type][layer][n_components]['avg_time']
+                    mean_dist = np.mean(results[c_type][layer][n_components]['similarity_dist'])
+                    mean_time = np.mean(results[c_type][layer][n_components]['avg_time'])
                     print 'Evaluate Script :: C Type : ', c_type, ' // Layer : ', layer, ' // Dim : ', n_components, ' // Count : ', count
-                    print 'Evaluate Script :: Similarity Distance : ', similarity_dist / (
-                    count + 1e-7), ' // Avg Time : ', avg_time / (count + 1e-7)
+                    print 'Evaluate Script :: Similarity Distance : ', mean_dist, ' // Avg Time : ', mean_time
 
                 count += 1 * batch_size
 
@@ -106,10 +105,7 @@ for c_type in compression_types:
                         class_distance += dist_mat[t_class, x[1]]
                     avg_dist = class_distance / len(query_results)
 
-                    results[c_type][layer][n_components]['similarity_dist'] += (worst_case - avg_dist) / (worst_case - best_case)
-                    results[c_type][layer][n_components]['avg_time'] += et - st
+                    results[c_type][layer][n_components]['similarity_dist'].append((worst_case - avg_dist) / (worst_case - best_case))
+                    results[c_type][layer][n_components]['avg_time'].append(et - st)
 
-            results[c_type][layer][n_components]['similarity_dist'] /= len(test_files)
-            results[c_type][layer][n_components]['avg_time'] /= len(test_files)
-
-hkl.dump(results, 'results_pca.hkl')
+    utils.dump_results(results, c_type, distance_matrix_layer)
