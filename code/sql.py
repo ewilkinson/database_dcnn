@@ -225,9 +225,6 @@ def query_distances_by_file(features, files, compression, layer, dimension):
     values = [features.tolist()]
     values.extend(files)
 
-    print sql_command
-    print values
-
     cur.execute(sql_command, values)
 
     results = cur.fetchall()
