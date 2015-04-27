@@ -1,4 +1,4 @@
-import sql
+import sql_tsne
 import utils
 import os
 import numpy as np
@@ -10,12 +10,14 @@ eng = matlab.engine.start_matlab()
 
 #image_file = 'ILSVRC2012_val_00045381.JPEG'
 
-#image_file = 'ILSVRC2012_val_00025381.JPEG'
-image_file = 'ILSVRC2012_val_00015447.JPEG'
-layer = 'fc7'
-dimension = 128
+image_file = 'ILSVRC2012_val_00025381.JPEG'
+#image_file = 'ILSVRC2012_val_00015447.JPEG'
+layer = 'pool5'
+dimension = 256
 compression = 'tsne'
-k = 115
+tsne_dim = 5
+
+k = 40
 
 dist_mat = utils.load_distance_matrix('pool5')
 
@@ -42,14 +44,13 @@ comp_feat = compressor.transform(feat).ravel()
 comp_feat = comp_feat.tolist()
 
 comp_feat = matlab.double(comp_feat)
-tsne_dim = 2
 comp_feat = eng.tsne_testing_python(comp_feat, tsne_dim, layer, dimension, 'pca')
 
 comp_feat = np.array(comp_feat)
 comp_feat= comp_feat.ravel()
-print comp_featq
+print comp_feat
 
-results = sql.query_top_k(k=k,
+results = sql_tsne.query_top_k(k=k,
                           features=comp_feat,
                           compression=compression,
                           layer=layer,

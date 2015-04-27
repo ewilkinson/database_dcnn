@@ -1,4 +1,4 @@
-import sql
+import sql_tsne
 import utils
 import os, time
 import caffe
@@ -101,14 +101,14 @@ for c_type in compression_types:
 
                     comp_feat = np.array(comp_feat)
                     comp_feat= comp_feat.ravel()
-                    #print comp_feat
+                    print comp_feat.shape
 
                     #transforms.append(comp_feat)
 
 
                     # run the top k query and time it
                     st = time.time()
-                    query_results = sql.query_top_k(k=k,
+                    query_results = sql_tsne.query_top_k(k=k,
                                                     features=comp_feat,
                                                     compression=c_type,
                                                     layer=layer,
