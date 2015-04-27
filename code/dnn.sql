@@ -27,6 +27,7 @@ AS $$
   return c
 $$ LANGUAGE plpythonu;
 
-
+-- Hash index creation for quick lookup based on file
+-- CREATE INDEX file_idx on pca_fc7 USING hash (file);
 
 --select distance2(t1.data, test.data) from t1, test;

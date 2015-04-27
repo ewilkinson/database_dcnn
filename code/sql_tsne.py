@@ -4,10 +4,7 @@ import utils
 import matlab.engine
 import numpy as np
 
-
-#def store_feature(layers, compression, keep_idxs, tsne_dim):
-def store_feature(layers, compression, tsne_dim):
-   # print 'tsne  333333'
+def store_tsne_feature(layers, compression, tsne_dim):
     conn = psycopg2.connect(dbname=utils.dbname, user=utils.user, password=utils.password, host=utils.host)
     cur = conn.cursor()
 
@@ -24,9 +21,10 @@ def store_feature(layers, compression, tsne_dim):
         values_sql = "VALUES(%s,%s,"
 
         if compression == 'tsne':
-            dimensions = [64, 128, 256]
+            dimensions = [64, 128, 256] #[64, 128, 256]
         else:
             dimensions = utils.get_dimension_options(layer, compression)
+
         if len(dimensions) == 0:
             print 'POSSIBLE ERROR: No dimensions loaded for ', layer, ' with ', compression
             continue
@@ -53,31 +51,19 @@ def store_feature(layers, compression, tsne_dim):
 
         X = scalar.transform(X)
 
-        #X = X[keep_idxs]
-        imagenet_ids = np.asarray(imagenet_ids, dtype=np.object)
-        #imagenet_ids = imagenet_ids[keep_idxs]
-
-
-
         transforms = []
         # apply the compression algorithm
         for dim in dimensions:
-            if compression == 'tsne':
-                print 'tsne'
-                compressor = utils.load_compressor(layer, dim, 'pca')
-                #utils.plot_tsne_features('fc7',64)
+            print 'tsne'
+            compressor = utils.load_compressor(layer, dim, 'pca')
 
-                comp_X = compressor.transform(X)
-                comp_X = comp_X.tolist()
+            comp_X = compressor.transform(X)
+            comp_X = comp_X.tolist()
 
-                comp_X = matlab.double(comp_X)
-                comp_X = eng.tsne_testing_python(comp_X, tsne_dim, layer, dim, 'pca')
-                comp_X = np.array(comp_X)
-                #print comp_X
-                transforms.append(comp_X)
-            else:
-                compressor = utils.load_compressor(layer, dim, compression)
-                transforms.append(compressor.transform(X))
+            comp_X = matlab.double(comp_X)
+            comp_X = eng.tsne_testing_python(comp_X, tsne_dim, layer, dim, 'pca')
+            comp_X = np.array(comp_X)
+            transforms.append(comp_X)
 
         value = []
         for i in range(X.shape[0]):
@@ -150,11 +136,9 @@ def create_feature_name(dim):
 
 if __name__ == '__main__':
     #layers = ['fc7', 'fc6', 'pool5', 'conv4', 'conv3']
-    #layers = ['fc7', 'fc6', 'pool5']
-    layers = ['fc7', 'fc6', 'pool5']
+    layers = ['fc7', 'pool5']
     #compression = 'pca'
     compression = 'tsne'
-    tsne_dim = 5
-    store_feature(layers, compression, tsne_dim)
+    store_tsne_feature(layers, compression, 5)
 
 

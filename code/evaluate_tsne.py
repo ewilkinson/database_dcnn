@@ -1,4 +1,4 @@
-import sql_tsne
+import sql
 import utils
 import os, time
 import caffe
@@ -6,25 +6,28 @@ import numpy as np
 import hickle as hkl
 import matlab.engine
 
+from sklearn.neighbors import KDTree
 
 # ------------------------------------------------
 # Script Params
 # ------------------------------------------------
 
 compression_types = ['tsne']
+tsne_dim = 5
 
-distance_matrix_layer = 'pool5'
+feature_layers = ['fc7'] #, 'conv4', 'conv3']
+pca_dimensions = [64, 128, 256]
+
+
+distance_matrix_layer = 'fc7'
 
 # feature_layers = utils.feature_layers
-feature_layers = ['fc7', 'fc6', 'pool5'] #, 'conv4', 'conv3']
-dimensions = [64,128,256]
-# dimensions = [512]
 
 # top k items to be retrieved and measured
 k = 5
 
 # number of test files to evaluate. Must keep small otherwise it will take too long
-N = 10
+N = 1000
 
 # ------------------------------------------------
 # End Params
@@ -46,6 +49,10 @@ dist_mat = utils.load_distance_matrix(distance_matrix_layer)
 # start matlab engine
 eng = matlab.engine.start_matlab()
 
+query_compressor = utils.load_compressor(layer='fc7',
+                                               dimension=256,
+                                               compression='pca')
+
 
 # initialize results data object
 results = {}
@@ -53,14 +60,17 @@ for c_type in compression_types:
     results[c_type] = {}
     for layer in feature_layers:
         results[c_type][layer] = {}
-        for n_components in dimensions:
-            results[c_type][layer][n_components] = {'similarity_dist': 0, 'avg_time': 0}
+        for n_components in pca_dimensions:
+            results[c_type][layer][n_components] = {'similarity_dist': [], 'avg_time': []}
 
 for c_type in compression_types:
     for layer in feature_layers:
         scalar = utils.load_scalar(layer=layer)
 
-        for n_components in dimensions:
+        for n_components in pca_dimensions:
+            X, ids, classes = utils.load_tsne_features(layer, n_components, tsne_dim)
+            tree = KDTree(X, leaf_size=10)
+
             compressor = utils.load_compressor(layer=layer,
                                                dimension=n_components,
                                                compression='pca')
@@ -69,11 +79,10 @@ for c_type in compression_types:
             for t_files in utils.batch_gen(test_files, batch_size=batch_size):
 
                 if count % 50 == 0:
-                    similarity_dist = results[c_type][layer][n_components]['similarity_dist']
-                    avg_time = results[c_type][layer][n_components]['avg_time']
+                    mean_dist = np.mean(results[c_type][layer][n_components]['similarity_dist'])
+                    mean_time = np.mean(results[c_type][layer][n_components]['avg_time'])
                     print 'Evaluate Script :: C Type : ', c_type, ' // Layer : ', layer, ' // Dim : ', n_components, ' // Count : ', count
-                    print 'Evaluate Script :: Similarity Distance : ', similarity_dist / (
-                    count + 1e-7), ' // Avg Time : ', avg_time / (count + 1e-7)
+                    print 'Evaluate Script :: Similarity Distance : ', mean_dist, ' // Avg Time : ', mean_time
 
                 count += 1 * batch_size
 
@@ -93,26 +102,26 @@ for c_type in compression_types:
                     comp_feat = compressor.transform(feat).ravel()
 
                     # for tsne
-                    comp_feat = comp_feat.tolist()
+                    tsne_feat = comp_feat.tolist()
 
-                    comp_feat = matlab.double(comp_feat)
-                    tsne_dim = 2
-                    comp_feat = eng.tsne_testing_python(comp_feat, tsne_dim, layer, n_components, 'pca')
+                    tsne_feat = matlab.double(tsne_feat)
+                    tsne_feat = eng.tsne_testing_python(tsne_feat, tsne_dim, layer, n_components, 'pca')
 
-                    comp_feat = np.array(comp_feat)
-                    comp_feat= comp_feat.ravel()
-                    print comp_feat.shape
+                    tsne_feat = np.array(tsne_feat)
+                    tsne_feat= tsne_feat.ravel()
 
-                    #transforms.append(comp_feat)
-
-
-                    # run the top k query and time it
                     st = time.time()
-                    query_results = sql_tsne.query_top_k(k=k,
-                                                    features=comp_feat,
-                                                    compression=c_type,
-                                                    layer=layer,
-                                                    dimension=n_components)
+
+                    # query the KD tree to find the K closest items
+                    dist, ind = tree.query(tsne_feat, k=50)
+                    ind = np.asarray(ind, dtype=np.int32).ravel()
+
+                    query_feat = query_compressor.transform(feat).ravel()
+                    query_results = sql.query_distances_by_file(features=query_feat,
+                                                                files=ids[ind].tolist(),
+                                                                compression='pca',
+                                                                layer='fc7',
+                                                                dimension=256)
 
                     et = time.time()
 
@@ -126,11 +135,8 @@ for c_type in compression_types:
                         class_distance += dist_mat[t_class, x[1]]
                     avg_dist = class_distance / len(query_results)
 
-                    results[c_type][layer][n_components]['similarity_dist'] += (worst_case - avg_dist) / (worst_case - best_case)
-                    results[c_type][layer][n_components]['avg_time'] += et - st
+                    results[c_type][layer][n_components]['similarity_dist'].append((worst_case - avg_dist) / (worst_case - best_case))
+                    results[c_type][layer][n_components]['avg_time'].append(et - st)
 
-            results[c_type][layer][n_components]['similarity_dist'] /= len(test_files)
-            results[c_type][layer][n_components]['avg_time'] /= len(test_files)
-
-hkl.dump(results, 'results_pca.hkl')
+hkl.dump(results, 'tsne_' + str(tsne_dim) + '_results.hkl')
 eng.exit()

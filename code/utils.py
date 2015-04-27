@@ -549,7 +549,7 @@ def load_tsne_features(layer, pca_dimension, tsne_dim):
         classes[i] = klass
         ids.append(img_file)
 
-    return X, ids, classes
+    return X, np.asarray(ids, dtype=np.object), np.asarray(classes, dtype=np.int32)
 
 def plot_tsne_features(layer, dimension):
     import matplotlib as mpl

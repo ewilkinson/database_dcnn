@@ -210,7 +210,32 @@ def retrieve_compression_features(compression, layer, dimension):
 
     return results
 
+def query_distances_by_file(features, files, compression, layer, dimension):
+    conn = psycopg2.connect(dbname=utils.dbname, user=utils.user, password=utils.password, host=utils.host)
+    cur = conn.cursor()
 
+    sql_command = "SELECT file, class, distance2(%s," + create_feature_name(
+        dimension) + ") as D  FROM " + create_table_name(compression, layer) + " WHERE file IN ("
+
+    for f in files:
+        sql_command += "%s,"
+
+    sql_command = sql_command[:-1] + ") ORDER BY D ASC;"
+
+    values = [features.tolist()]
+    values.extend(files)
+
+    print sql_command
+    print values
+
+    cur.execute(sql_command, values)
+
+    results = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return results
 
 def create_table_name(compression, layer):
     return compression + '_' + layer

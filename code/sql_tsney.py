@@ -6,8 +6,8 @@ import numpy as np
 
 tsne_dim = 2
 
-def store_feature(layers, compression, keep_idxs):
-    print 'tsne  333333'
+
+def store_tsne_feature(layers, compression, tsne_dim):
     conn = psycopg2.connect(dbname=utils.dbname, user=utils.user, password=utils.password, host=utils.host)
     cur = conn.cursor()
 
@@ -150,8 +150,7 @@ def create_feature_name(dim):
 
 if __name__ == '__main__':
     #layers = ['fc7', 'fc6', 'pool5', 'conv4', 'conv3']
-    #layers = ['fc7', 'fc6', 'pool5']
-    layers = ['fc7']
+    layers = ['fc7', 'pool5']
     #compression = 'pca'
     compression = 'tsne'
     store_feature(layers, compression)

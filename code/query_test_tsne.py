@@ -62,7 +62,7 @@ labels = utils.load_english_labels()
 # compute the expected similarity for random guessing
 test_class = test_labels[image_file]
 worst_case = np.mean(dist_mat[test_class, :])
-best_case = 0.625 * 0 + (1-0.625) * worst_case
+best_case = 0
 
 class_distance = 0
 for x in results:
