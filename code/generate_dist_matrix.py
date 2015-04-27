@@ -10,8 +10,6 @@ train_labels = utils.load_train_class_labels()
 X, ids = utils.load_feature_layer(layer=layer)
 scalar = utils.load_scalar(layer=layer)
 
-X = scalar.transform(X)
-
 min_klass_id = min(train_labels.values())
 max_klass_id = max(train_labels.values())
 
@@ -62,9 +60,6 @@ for i in range(min_klass_id, max_klass_id+1):
         weights_ij[sparse_i & sparse_j] = 1e-7
 
         distance_matrix[i,j] = np.sum( weights_ij * np.square(mean_i - mean_j)) / (np.sum(weights_ij))
-
-        # print 'Distance : ', kl_distance_matrix[i,j]
-        # print 'Time : ', elapsed_time
 
 print 'Time : ', time.clock() - start_time
 

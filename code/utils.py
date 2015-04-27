@@ -382,6 +382,54 @@ def plot_compression_results(compression_type, dist_type, title):
 
     plt.show()
 
+def plot_compression_times(compression_type, dist_type, title):
+    import matplotlib.pyplot as plt
+
+    results = load_results(compression_type, dist_type)
+    layers = results[compression_type].keys()
+    dimensions = results[compression_type][layers[0]].keys()
+    dimensions = np.asarray(dimensions, dtype=np.int32)
+    dimensions.sort()
+
+    N = len(dimensions)
+    fig, ax = plt.subplots()
+
+    index = np.arange(N)
+    bar_width = 0.15
+
+    opacity = 0.6
+    error_config = {'ecolor': '0.3'}
+
+    colors = {'fc7': 'r', 'fc6': 'b', 'pool5': 'g', 'conv4': 'c', 'conv3': 'm'}
+    c_type = compression_type
+
+    count = 0
+    for layer in ['fc7']:
+        mean_vals = []
+        std_vals = []
+        for dim in dimensions:
+            mean = np.mean(results[c_type][layer][str(dim)]['avg_time'])
+            std = np.std(results[c_type][layer][str(dim)]['avg_time'])
+            mean_vals.append(mean)
+            std_vals.append(std)
+
+        rects1 = plt.bar(index + bar_width*count, mean_vals, bar_width,
+                         alpha=opacity,
+                         yerr=std,
+                         error_kw=error_config,
+                         color=colors[layer],
+                         label=layer)
+        count += 1
+
+    plt.xlabel('Dimension', fontsize=20)
+    plt.ylabel('Time (s)', fontsize=20)
+    plt.title(title, fontsize=28)
+
+    plt.xticks(index + (0.5)*bar_width, dimensions)
+    plt.legend(bbox_to_anchor=(1., 1), loc=2, borderaxespad=0., prop={'size':20})
+
+    plt.show()
+
 def generate_test_set(n=1000):
     """
     Store the pointers to the files to be used in the test set.
@@ -480,10 +528,9 @@ def load_instance_features(layer):
 
     return X, ids
 
-def load_tsne_features(compression, layer, dimension, tsne_dim):
+def load_tsne_features(layer, pca_dimension, tsne_dim):
     """
 
-    :param compression:
     :param layer:
     :param dimension:
     :param tsne_dim:
@@ -491,7 +538,7 @@ def load_tsne_features(compression, layer, dimension, tsne_dim):
     :return: X, ids, classes
     """
     import sql
-    results = sql.retrieve_compression_features(compression, layer, dimension)
+    results = sql.retrieve_compression_features('tsne', layer, pca_dimension)
 
     X = np.zeros((len(results), tsne_dim))
     ids = []

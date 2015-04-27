@@ -2,6 +2,7 @@
 /images/imagenet/*
 /images/training_images/*
 
+/Parametric t-SNE/*
 /features/**/*.hkl
 
 *.caffemodel
