@@ -4,8 +4,10 @@ import utils
 import matlab.engine
 import numpy as np
 
+tsne_dim = 2
 
-def store_feature(layers, compression):
+def store_feature(layers, compression, keep_idxs):
+    print 'tsne  333333'
     conn = psycopg2.connect(dbname=utils.dbname, user=utils.user, password=utils.password, host=utils.host)
     cur = conn.cursor()
 
@@ -22,7 +24,7 @@ def store_feature(layers, compression):
         values_sql = "VALUES(%s,%s,"
 
         if compression == 'tsne':
-            dimensions = [64, 128, 256]
+            dimensions = [64] #[64, 128, 256]
         else:
             dimensions = utils.get_dimension_options(layer, compression)
         if len(dimensions) == 0:
@@ -38,8 +40,8 @@ def store_feature(layers, compression):
         values_sql = values_sql[:-1] + ");"
         insert_command = insert_command[:-1] + ") " + values_sql
 
-        print table_command
-        print insert_command
+        #print table_command
+        #print insert_command
 
         cur.execute(table_command)
 
@@ -51,6 +53,10 @@ def store_feature(layers, compression):
 
         X = scalar.transform(X)
 
+        X = X[keep_idxs]
+        imagenet_ids = np.asarray(imagenet_ids, dtype=np.object)
+        imagenet_ids = imagenet_ids[keep_idxs]
+
 
 
         transforms = []
@@ -59,15 +65,15 @@ def store_feature(layers, compression):
             if compression == 'tsne':
                 print 'tsne'
                 compressor = utils.load_compressor(layer, dim, 'pca')
-
+                #utils.plot_tsne_features('fc7',64)
 
                 comp_X = compressor.transform(X)
                 comp_X = comp_X.tolist()
 
                 comp_X = matlab.double(comp_X)
-                tsne_dim = 2
                 comp_X = eng.tsne_testing_python(comp_X, tsne_dim, layer, dim, 'pca')
                 comp_X = np.array(comp_X)
+                print comp_X
                 transforms.append(comp_X)
             else:
                 compressor = utils.load_compressor(layer, dim, compression)
@@ -144,7 +150,8 @@ def create_feature_name(dim):
 
 if __name__ == '__main__':
     #layers = ['fc7', 'fc6', 'pool5', 'conv4', 'conv3']
-    layers = ['fc7', 'fc6', 'pool5']
+    #layers = ['fc7', 'fc6', 'pool5']
+    layers = ['fc7']
     #compression = 'pca'
     compression = 'tsne'
     store_feature(layers, compression)

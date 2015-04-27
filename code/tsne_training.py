@@ -8,20 +8,33 @@ if __name__ == '__main__':
     import time
 
 #    layers = ['fc7', 'fc6', 'pool5', 'conv4', 'conv3', 'pool2', 'pool1']
-    layers = ['fc7']
+    layers = ['fc7', 'fc6', 'pool5']
     #n_components = [64, 128, 256]
-    n_components = [128]
+    n_components = [64, 128, 256]
     c_type = 'pca'
 
     #==== dimensions for tsne =========
-    dimensions = 4
+    dimensions = 10
 
+    # trainclass = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    # trainlabels = utils.load_train_class_labels()
 
     #========= t-sne ==============
     for layer in layers:
         #==== load original feature ======
         X0, ids = utils.load_feature_layer(layer)
 
+        # keep_idxs = []
+        # for i, img_file in enumerate(ids):
+        #     klass = trainlabels[img_file]
+        #     if klass in trainclass:
+        #         keep_idxs.append(i)
+        #
+        # keep_idxs = np.asarray(keep_idxs, dtype=np.int64)
+        # ids = np.asarray(ids, dtype=np.object)
+        #
+        # X0 = X0[keep_idxs]
+        # ids = ids[keep_idxs]
 
         #ids = ids[0:500]
         #===== Convert ids (filename) to labels(integer) =========
