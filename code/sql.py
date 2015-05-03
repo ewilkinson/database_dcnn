@@ -247,7 +247,7 @@ def create_feature_name(dim):
 
 
 if __name__ == '__main__':
-    layers = ['fc7', 'fc6', 'pool5', 'conv4', 'conv3']
+    layers = ['fc7']
     compression = 'pca'
     store_feature(layers, compression)
 
