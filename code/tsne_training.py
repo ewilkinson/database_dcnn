@@ -8,16 +8,16 @@ if __name__ == '__main__':
     import time
 
 #    layers = ['fc7', 'fc6', 'pool5', 'conv4', 'conv3', 'pool2', 'pool1']
-    layers = ['fc7', 'fc6', 'pool5']
+    layers = ['fc7']
     #n_components = [64, 128, 256]
-    n_components = [64, 128, 256]
-    c_type = 'pca'
+    n_components = [4096]
+    c_type = 'new'
 
     #==== dimensions for tsne =========
-    dimensions = 10
+    dimensions = 128
 
-    # trainclass = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    # trainlabels = utils.load_train_class_labels()
+    trainclass = range(10)
+    trainlabels = utils.load_train_class_labels()
 
     #========= t-sne ==============
     for layer in layers:
@@ -53,19 +53,24 @@ if __name__ == '__main__':
         for n_com in n_components:
 
             scalar = utils.load_scalar(layer)
-            compressor = utils.load_compressor(layer=layer, dimension=n_com, compression=c_type)
             X = scalar.transform(X0)
-            comp_X = compressor.transform(X)
-            #comp_X = comp_X[0:500,:]
+
+            # for i in range(4096):
+            #     g = X[:,i] < 0.0
+            #     X[g, i] = 0
+            #     X[:,i] = X[:,i] / X[:,i].max()
+
 
 
 
             #===== Convert ndarray to list so that we can pass the variable to matalb function =========
-            comp_X = comp_X.tolist()
-            comp_X = matlab.double(comp_X)
+            # comp_X = comp_X.tolist()
+            # comp_X = matlab.double(comp_X)
+            print 'Converting to matlab double'
+            X = matlab.double(X.tolist())
 
             print '===============================start tsne in python ==================================='
             print layer, n_com, c_type
 
-            result = eng.tsne_traning_python(comp_X,labels,dimensions, layer, n_com, c_type )
+            result = eng.tsne_traning_python(X,labels,dimensions, layer, n_com, c_type )
 

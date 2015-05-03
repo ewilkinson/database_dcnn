@@ -3,26 +3,20 @@ import utils
 import os, time
 import caffe
 import numpy as np
-import hickle as hkl
-import matlab.engine
 
-from sklearn.neighbors import BallTree
-
-
+import lshash
 # ------------------------------------------------
 # Script Params
 # ------------------------------------------------
 
-compression_types = ['tsne']
-tsne_dim = 64
-
-feature_layers = ['fc7'] #, 'conv4', 'conv3']
-pca_dimensions = [4096]
-
+compression_types = ['lsh']
 
 distance_matrix_layer = 'fc7'
 
 # feature_layers = utils.feature_layers
+feature_layers = ['fc7']
+# dimensions = [128, 256, 512, 1024, 2048]
+dimensions = [256]
 
 # top k items to be retrieved and measured
 k = 5
@@ -47,34 +41,32 @@ labels = utils.load_english_labels()
 
 dist_mat = utils.load_distance_matrix(distance_matrix_layer)
 
-# start matlab engine
-eng = matlab.engine.start_matlab()
-
-def create_ball_tree(c_type, layer, n_components):
-    X, files, classes = utils.load_tsne_features(layer, n_components, tsne_dim)
-
-    files = np.asarray(files, dtype=np.object)
-    classes = np.asarray(classes, dtype=np.int32)
-    X = np.asarray(X, dtype=np.float32)
-
-    return BallTree(X, leaf_size=20), files, classes
-
-
 # initialize results data object
 results = {}
 for c_type in compression_types:
     results[c_type] = {}
     for layer in feature_layers:
         results[c_type][layer] = {}
-        for n_components in pca_dimensions:
+        for n_components in dimensions:
             results[c_type][layer][n_components] = {'similarity_dist': [], 'avg_time': [], 'success': []}
+
+
+train_labels = utils.load_train_class_labels()
+
+
 
 for c_type in compression_types:
     for layer in feature_layers:
-        scalar = utils.load_scalar(layer=layer)
+        X, ids = utils.load_feature_layer(layer)
 
-        for n_components in pca_dimensions:
-            tree, files, classes = create_ball_tree(c_type, layer, n_components)
+        for n_components in dimensions:
+            lsh = lshash.LSHash(dimensions[0], X.shape[1], num_hashtables=1,
+                 storage_config=None, matrices_filename=None, overwrite=False)
+
+            hashes = []
+            from bitarray import bitarray
+            for x in X:
+                hashes.append(bitarray(lsh._hash(lsh.uniform_planes[0], x)))
 
             count = 0
             for t_files in utils.batch_gen(test_files, batch_size=batch_size):
@@ -98,53 +90,40 @@ for c_type in compression_types:
 
                 for i in range(batch_size):
                     t_file = t_files[i]
+
                     feat = net.blobs[layer].data[i].ravel()
-                    feat = scalar.transform(feat)
 
-                    # for tsne
-                    tsne_feat = matlab.double(feat.tolist())
+                    st = time.clock() # START CLOCK
 
-                    st = time.clock()
-                    tsne_feat = eng.tsne_testing_python(matlab.double(feat.tolist()), tsne_dim, layer, n_components, 'none')
+                    query_hash = bitarray(lsh._hash(lsh.uniform_planes[0], feat))
+                    distances = []
+                    for hash in hashes:
+                        xor_result = hash ^ query_hash
+                        distances.append(xor_result.count())
 
-                    tsne_feat = np.array(tsne_feat)
-                    tsne_feat= tsne_feat.ravel()
-
-                    # query the Ball tree to find the K closest items
-                    dist, ind = tree.query(tsne_feat, k=k)
-                    ind = np.asarray(ind, dtype=np.int32).ravel()
-
-                    # query_feat = query_compressor.transform(feat).ravel()
-                    # query_results = sql.query_distances_by_file(features=query_feat,
-                    #                                             files=ids[ind].tolist(),
-                    #                                             compression='pca',
-                    #                                             layer='fc7',
-                    #                                             dimension=256)
-
-                    et = time.clock()
+                    distances = np.array(distances)
+                    sort_idxs = np.argsort(distances)
+                    query_results = sort_idxs[:k]
+                    et = time.clock() # END CLOCK
 
                     t_class = test_labels[t_file]
 
                     worst_case = np.mean(dist_mat[t_class, :])
                     best_case = 0
 
-                    class_distance = 0
                     has_success = 0
-                    for x in ind:
-                        dist = dist_mat[t_class, classes[x]]
+                    class_distance = 0
+
+                    for x in query_results:
+                        dist = dist_mat[t_class, train_labels[ids[x]]]
                         if dist == 0:
                             has_success = 1
                         class_distance += dist
-                    avg_dist = class_distance / len(ind)
 
-                    # class_distance = 0
-                    # for x in query_results:
-                    #     class_distance += dist_mat[t_class, x[1]]
-                    # avg_dist = class_distance / len(query_results)
+                    avg_dist = class_distance / len(query_results)
 
                     results[c_type][layer][n_components]['similarity_dist'].append((worst_case - avg_dist) / (worst_case - best_case))
                     results[c_type][layer][n_components]['avg_time'].append(et - st)
                     results[c_type][layer][n_components]['success'].append(has_success)
 
-hkl.dump(results, 'tsne_' + str(tsne_dim) + '_results.hkl')
-eng.exit()
+    # utils.dump_results(results, c_type, distance_matrix_layer)

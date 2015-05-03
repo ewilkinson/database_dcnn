@@ -21,7 +21,7 @@ def store_tsne_feature(layers, compression, tsne_dim):
         values_sql = "VALUES(%s,%s,"
 
         if compression == 'tsne':
-            dimensions = [64, 128, 256] #[64, 128, 256]
+            dimensions = [4096] #[64, 128, 256]
         else:
             dimensions = utils.get_dimension_options(layer, compression)
 
@@ -55,18 +55,20 @@ def store_tsne_feature(layers, compression, tsne_dim):
         # apply the compression algorithm
         for dim in dimensions:
             print 'tsne'
-            compressor = utils.load_compressor(layer, dim, 'pca')
-
-            comp_X = compressor.transform(X)
-            comp_X = comp_X.tolist()
-
-            comp_X = matlab.double(comp_X)
-            comp_X = eng.tsne_testing_python(comp_X, tsne_dim, layer, dim, 'pca')
+            # compressor = utils.load_compressor(layer, dim, 'pca')
+            #
+            # comp_X = compressor.transform(X)
+            # comp_X = comp_X.tolist()
+            #
+            # comp_X = matlab.double(comp_X)
+            X = matlab.double(X.tolist())
+            comp_X = eng.tsne_testing_python(X, tsne_dim, layer, dim, 'none')
             comp_X = np.array(comp_X)
             transforms.append(comp_X)
 
         value = []
-        for i in range(X.shape[0]):
+        print 'Inserting'
+        for i in range(comp_X.shape[0]):
             file_name = imagenet_ids[i]
             value = [file_name, train_labels[file_name]]
             for X_prime in transforms:
@@ -136,9 +138,9 @@ def create_feature_name(dim):
 
 if __name__ == '__main__':
     #layers = ['fc7', 'fc6', 'pool5', 'conv4', 'conv3']
-    layers = ['fc7', 'pool5']
+    layers = ['fc7']
     #compression = 'pca'
     compression = 'tsne'
-    store_tsne_feature(layers, compression, 5)
+    store_tsne_feature(layers, compression, 64)
 
 

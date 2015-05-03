@@ -279,9 +279,9 @@ def load_feature_layer(layer):
     print 'Total Load Time for Layer : ', layer
     print 'Time (s) : ', time.clock() - start_time
 
-    return X, imagenet_ids
+    return X, np.asarray(imagenet_ids, dtype=np.object)
 
-def dump_scaler(layer, scaler):
+def dump_scalar(layer, scaler):
     """
     Dumps the scalar
 
@@ -356,7 +356,8 @@ def plot_compression_results(compression_type, dist_type, title):
     c_type = compression_type
 
     count = 0
-    for layer in ['fc7', 'fc6', 'pool5', 'conv4', 'conv3']:
+    # for layer in ['fc7', 'fc6', 'pool5', 'conv4', 'conv3']:
+    for layer in ['fc7']:
         mean_vals = []
         std_vals = []
         for dim in dimensions:
@@ -367,8 +368,8 @@ def plot_compression_results(compression_type, dist_type, title):
 
         rects1 = plt.bar(index + bar_width*count, mean_vals, bar_width,
                          alpha=opacity,
-                         # yerr=std,
-                         # error_kw=error_config,
+                         yerr=std,
+                         error_kw=error_config,
                          color=colors[layer],
                          label=layer)
         count += 1
